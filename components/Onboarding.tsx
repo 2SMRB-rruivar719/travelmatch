@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { UserProfile, TravelStyle } from '../types';
+import { UserProfile, TravelStyle, UserRole } from '../types';
 import { Button } from './Button';
 import { Compass, Calendar, DollarSign, MapPin, User, Check } from 'lucide-react';
+import { registerUser } from '../services/api';
 
 interface OnboardingProps {
   onComplete: (profile: UserProfile) => void;
@@ -12,26 +13,59 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   const [formData, setFormData] = useState<Partial<UserProfile>>({
     travelStyle: [],
     interests: [],
-    budget: 'Medio'
+    budget: 'Medio',
   });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [role, setRole] = useState<UserRole>('cliente');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleNext = () => setStep(p => p + 1);
   
-  const handleComplete = () => {
-    if (formData.name && formData.destination) {
-      onComplete({
-        id: 'user-me',
+  const handleComplete = async () => {
+    setError(null);
+    if (!formData.name || !formData.destination) {
+      setError('Nombre y destino son obligatorios.');
+      return;
+    }
+    if (!email) {
+      setError('El email es obligatorio.');
+      return;
+    }
+    if (!password || password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    if (password !== passwordConfirm) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const created = await registerUser({
         name: formData.name,
-        age: formData.age || 25,
-        country: formData.country || 'Global',
-        bio: formData.bio || 'Listo para viajar!',
-        budget: formData.budget || 'Medio',
+        email,
+        password,
+        role,
+        destination: formData.destination,
+        dates: formData.dates,
+        age: formData.age,
+        country: formData.country,
+        bio: formData.bio,
+        budget: (formData.budget || 'Medio') as UserProfile['budget'],
         travelStyle: formData.travelStyle || [],
         interests: formData.interests || [],
-        avatarUrl: 'https://picsum.photos/seed/me/200/200',
-        destination: formData.destination,
-        dates: formData.dates || 'Próximamente'
-      } as UserProfile);
+        avatarUrl: formData.avatarUrl,
+        language: 'es',
+      });
+      onComplete(created);
+    } catch (err: any) {
+      setError('No se pudo completar el registro. Revisa los datos o intenta de nuevo.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,6 +130,63 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 value={formData.dates || ''}
                 onChange={e => setFormData({...formData, dates: e.target.value})}
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">Email</label>
+              <input
+                type="email"
+                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
+                placeholder="tucorreo@ejemplo.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">Contraseña</label>
+              <input
+                type="password"
+                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
+                placeholder="Mínimo 6 caracteres"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">Repetir contraseña</label>
+              <input
+                type="password"
+                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
+                placeholder="Repite la contraseña"
+                value={passwordConfirm}
+                onChange={e => setPasswordConfirm(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-sm font-medium text-gray-600">Tipo de cuenta</span>
+              <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setRole('cliente')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                    role === 'cliente' ? 'bg-white shadow-sm text-travel-accent' : 'text-gray-500'
+                  }`}
+                >
+                  Cliente
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('empresa')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                    role === 'empresa' ? 'bg-white shadow-sm text-travel-accent' : 'text-gray-500'
+                  }`}
+                >
+                  Empresa
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -167,17 +258,26 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
       </div>
 
       <div className="mt-6">
+        {error && (
+          <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl p-2 mb-3">
+            {error}
+          </p>
+        )}
         {step < 3 ? (
           <Button 
             fullWidth 
             onClick={handleNext}
-            disabled={step === 1 && (!formData.name || !formData.destination)}
+            disabled={step === 1 && (!formData.name || !formData.destination || !email)}
           >
             Siguiente
           </Button>
         ) : (
-          <Button fullWidth onClick={handleComplete}>
-            <Check className="mr-2 h-5 w-5" /> Comenzar Aventura
+          <Button fullWidth onClick={handleComplete} disabled={loading}>
+            {loading ? 'Creando cuenta...' : (
+              <>
+                <Check className="mr-2 h-5 w-5" /> Comenzar Aventura
+              </>
+            )}
           </Button>
         )}
       </div>

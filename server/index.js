@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import bcrypt from "bcryptjs";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -24,58 +25,155 @@ mongoose
 app.use(cors({ origin: "http://localhost:5173", credentials: false }));
 app.use(express.json());
 
-// Esquema de usuario (alineado con `types.ts`)
-const userProfileSchema = new mongoose.Schema(
+// Esquema de usuario con credenciales y rol
+const userSchema = new mongoose.Schema(
   {
-    id: { type: String, required: true, unique: true },
-    name: String,
-    age: Number,
-    country: String,
-    bio: String,
-    budget: { type: String, enum: ["Bajo", "Medio", "Alto"] },
-    travelStyle: [String],
-    interests: [String],
-    avatarUrl: String,
-    destination: String,
-    dates: String,
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true, index: true },
+    passwordHash: { type: String, required: true },
+    role: { type: String, enum: ["cliente", "empresa"], required: true },
+    age: { type: Number, default: 25 },
+    country: { type: String, default: "Global" },
+    bio: { type: String, default: "Listo para viajar!" },
+    budget: { type: String, enum: ["Bajo", "Medio", "Alto"], default: "Medio" },
+    travelStyle: { type: [String], default: [] },
+    interests: { type: [String], default: [] },
+    avatarUrl: { type: String, default: "https://picsum.photos/seed/me/200/200" },
+    destination: { type: String, required: true },
+    dates: { type: String, default: "Próximamente" },
+    language: { type: String, enum: ["es", "en"], default: "es" },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-const UserProfile = mongoose.model("UserProfile", userProfileSchema);
+userSchema.set("toJSON", {
+  transform: (_doc, ret) => {
+    delete ret.passwordHash;
+    return ret;
+  },
+});
 
-// Helper: id fijo para el usuario actual
-const CURRENT_USER_ID = "user-me";
+const User = mongoose.model("User", userSchema);
 
-// Obtener usuario actual
-app.get("/api/user/me", async (req, res) => {
+// Registro
+app.post("/api/auth/register", async (req, res) => {
   try {
-    const user = await UserProfile.findOne({ id: CURRENT_USER_ID }).lean();
-    if (!user) {
-      return res.status(204).send(); // No Content
+    const {
+      name,
+      email,
+      password,
+      role,
+      age,
+      country,
+      bio,
+      budget,
+      travelStyle,
+      interests,
+      avatarUrl,
+      destination,
+      dates,
+      language,
+    } = req.body;
+
+    if (!name || !email || !password || !role || !destination) {
+      return res
+        .status(400)
+        .json({ error: "Nombre, email, contraseña, rol y destino son obligatorios." });
     }
-    res.json(user);
+
+    if (!["cliente", "empresa"].includes(role)) {
+      return res.status(400).json({ error: "Rol inválido." });
+    }
+
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ error: "La contraseña debe tener al menos 6 caracteres." });
+    }
+
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(409).json({ error: "El email ya está registrado." });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email,
+      passwordHash,
+      role,
+      age,
+      country,
+      bio,
+      budget,
+      travelStyle,
+      interests,
+      avatarUrl,
+      destination,
+      dates,
+      language,
+    });
+
+    res.status(201).json(user.toJSON());
   } catch (err) {
-    console.error("Error al obtener usuario:", err);
-    res.status(500).json({ error: "Error al obtener usuario" });
+    console.error("Error en registro:", err);
+    res.status(500).json({ error: "Error al registrar usuario" });
   }
 });
 
-// Crear/actualizar usuario actual
-app.put("/api/user/me", async (req, res) => {
+// Login
+app.post("/api/auth/login", async (req, res) => {
   try {
-    const payload = { ...req.body, id: CURRENT_USER_ID };
+    const { email, password } = req.body;
 
-    const user = await UserProfile.findOneAndUpdate(
-      { id: CURRENT_USER_ID },
-      payload,
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    ).lean();
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ error: "Email y contraseña son obligatorios." });
+    }
 
-    res.json(user);
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: "Credenciales incorrectas." });
+    }
+
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isValid) {
+      return res.status(401).json({ error: "Credenciales incorrectas." });
+    }
+
+    res.json(user.toJSON());
   } catch (err) {
-    console.error("Error al guardar usuario:", err);
-    res.status(500).json({ error: "Error al guardar usuario" });
+    console.error("Error en login:", err);
+    res.status(500).json({ error: "Error al iniciar sesión" });
+  }
+});
+
+// Actualizar usuario (incluye idioma)
+app.put("/api/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const update = { ...req.body };
+
+    // Nunca permitir actualizar passwordHash directamente
+    delete update.passwordHash;
+
+    const user = await User.findByIdAndUpdate(id, update, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json(user.toJSON());
+  } catch (err) {
+    console.error("Error al actualizar usuario:", err);
+    res.status(500).json({ error: "Error al actualizar usuario" });
   }
 });
 

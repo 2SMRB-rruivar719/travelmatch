@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
-import { UserProfile } from '../types';
-import { Plane, Save, X, Camera } from 'lucide-react';
+import { UserProfile, LanguageCode } from '../types';
+import { Plane, Save, X, Camera, Globe2 } from 'lucide-react';
 import { Button } from './Button';
 
 interface ProfileViewProps {
   currentUser: UserProfile;
   onUpdateUser: (user: UserProfile) => void;
   onLogout: () => void;
+  language: LanguageCode;
+  onChangeLanguage: (lang: LanguageCode) => void;
 }
 
-export const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateUser, onLogout }) => {
+export const ProfileView: React.FC<ProfileViewProps> = ({
+  currentUser,
+  onUpdateUser,
+  onLogout,
+  language,
+  onChangeLanguage,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserProfile>(currentUser);
 
@@ -128,6 +136,22 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateU
        </div>
 
        <div className="space-y-4">
+         <div className="bg-gray-50 p-4 rounded-xl">
+           <h3 className="text-xs font-bold text-gray-400 uppercase mb-2">Ajustes</h3>
+           <div className="flex items-center justify-between">
+             <div className="flex items-center gap-2 text-gray-700">
+               <Globe2 size={18} className="text-travel-primary" />
+               <span className="font-medium text-sm">Idioma</span>
+             </div>
+             <button
+               onClick={() => onChangeLanguage(language === 'es' ? 'en' : 'es')}
+               className="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-gray-200 hover:bg-gray-100"
+             >
+               {language === 'es' ? 'Español' : 'English'}
+             </button>
+           </div>
+         </div>
+
          <div className="bg-gray-50 p-4 rounded-xl">
            <h3 className="text-xs font-bold text-gray-400 uppercase mb-2">Próximo destino</h3>
            <div className="flex items-center gap-2 text-travel-dark font-semibold">
