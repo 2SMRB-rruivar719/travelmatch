@@ -7,31 +7,36 @@ import { ChatInterface } from './components/ChatInterface';
 import { ProfileView } from './components/ProfileView';
 import { UserProfile } from './types';
 import { Logo } from './components/Logo';
+import { fetchCurrentUser, saveCurrentUser } from './services/api';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [currentView, setCurrentView] = useState('match');
 
-  // Load user from local storage (mock persistence)
+  // Cargar usuario desde la API (MongoDB)
   React.useEffect(() => {
-    const savedUser = localStorage.getItem('tm_user');
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
+    const loadUser = async () => {
+      const user = await fetchCurrentUser();
+      if (user) {
+        setCurrentUser(user);
+      }
+    };
+    loadUser();
   }, []);
 
   const handleOnboardingComplete = (profile: UserProfile) => {
     setCurrentUser(profile);
-    localStorage.setItem('tm_user', JSON.stringify(profile));
+    // Persistir en MongoDB a través de la API
+    void saveCurrentUser(profile);
   };
 
   const handleUpdateUser = (updatedProfile: UserProfile) => {
     setCurrentUser(updatedProfile);
-    localStorage.setItem('tm_user', JSON.stringify(updatedProfile));
+    // Actualizar en MongoDB
+    void saveCurrentUser(updatedProfile);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('tm_user');
     setCurrentUser(null);
     setCurrentView('match');
   };
