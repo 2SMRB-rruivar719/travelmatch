@@ -1,6 +1,18 @@
 import { UserProfile, LanguageCode, ThemeMode } from "../types";
 
-const API_BASE_URL = "http://localhost:4000/api";
+// Detectar entorno automáticamente:
+// - En desarrollo (Vite en puerto 5173) usamos backend en localhost:4000
+// - En producción (por ejemplo travelmatch.ddns.net) usamos el mismo origen /api
+const API_BASE_URL =
+  typeof window !== "undefined"
+    ? (() => {
+        const origin = window.location.origin;
+        if (origin.endsWith(":5173")) {
+          return "http://localhost:4000/api";
+        }
+        return `${origin.replace(/\/$/, "")}/api`;
+      })()
+    : "http://localhost:4000/api";
 
 export interface RegisterPayload {
   name: string;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserProfile, TravelStyle, UserRole } from '../types';
+import { UserProfile, TravelStyle, UserRole, LanguageCode } from '../types';
 import { Button } from './Button';
 import { Compass, Calendar, DollarSign, MapPin, User, Check, ChevronLeft } from 'lucide-react';
 import { registerUser } from '../services/api';
@@ -7,9 +7,10 @@ import { registerUser } from '../services/api';
 interface OnboardingProps {
   onComplete: (profile: UserProfile) => void;
   onCancel?: () => void;
+  language: LanguageCode;
 }
 
-export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
+export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, language }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<Partial<UserProfile>>({
     travelStyle: [],
@@ -77,7 +78,16 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) 
       });
       onComplete(created);
     } catch (err: any) {
-      setError(err?.message || 'No se pudo completar el registro. Revisa los datos o intenta de nuevo.');
+      let msg =
+        err?.message ||
+        'No se pudo completar el registro. Revisa los datos o intenta de nuevo.';
+      if (typeof msg === 'string' && msg.toLowerCase().includes('failed to fetch')) {
+        msg =
+          language === 'en'
+            ? 'Network error while creating your account. Please check your connection or try again.'
+            : 'Error de conexión al crear tu cuenta. Revisa tu conexión o inténtalo de nuevo.';
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

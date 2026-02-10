@@ -66,7 +66,10 @@ const App: React.FC = () => {
         return (
           <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')] bg-cover bg-center">
             <div className="min-h-screen bg-travel-primary/90 backdrop-blur-sm flex flex-col p-4 overflow-y-auto">
-              <Login onLoginSuccess={handleLoginSuccess} onBackToLanding={() => setAuthView('landing')} />
+              <Login
+                onLoginSuccess={handleLoginSuccess}
+                onBackToLanding={() => setAuthView('landing')}
+              />
             </div>
           </div>
         );
@@ -84,6 +87,7 @@ const App: React.FC = () => {
               <Onboarding
                 onComplete={handleOnboardingComplete}
                 onCancel={() => setAuthView('landing')}
+                language={language}
               />
             </div>
           </div>

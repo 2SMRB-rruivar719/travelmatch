@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from './Button';
 import { loginUser } from '../services/api';
-import { UserProfile } from '../types';
+import { LanguageCode, UserProfile } from '../types';
 import { ChevronLeft } from 'lucide-react';
 
 interface LoginProps {
@@ -34,7 +34,11 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onBackToLanding })
       const user = await loginUser(email, password);
       onLoginSuccess(user);
     } catch (err: any) {
-      setError('Credenciales incorrectas o error al iniciar sesión.');
+      let msg = err?.message || 'Credenciales incorrectas o error al iniciar sesión.';
+      if (typeof msg === 'string' && msg.toLowerCase().includes('failed to fetch')) {
+        msg = 'Error de conexión al iniciar sesión. Revisa tu conexión o inténtalo de nuevo.';
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
