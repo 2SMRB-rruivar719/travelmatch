@@ -22,7 +22,8 @@ mongoose
   });
 
 // Middlewares
-app.use(cors({ origin: "http://localhost:5173", credentials: false }));
+// Permitimos todas las procedencias para facilitar desarrollo y despliegue
+app.use(cors());
 app.use(express.json());
 
 // Esquema de usuario con credenciales y rol
