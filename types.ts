@@ -9,6 +9,7 @@ export enum TravelStyle {
 
 export type UserRole = 'cliente' | 'empresa';
 export type LanguageCode = 'es' | 'en';
+export type ThemeMode = 'light' | 'dark';
 
 export interface UserProfile {
   id: string;
@@ -25,6 +26,7 @@ export interface UserProfile {
   dates: string;
   role: UserRole;
   language: LanguageCode;
+   theme: ThemeMode;
 }
 
 export interface ItineraryDay {

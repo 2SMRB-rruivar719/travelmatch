@@ -38,10 +38,11 @@ const userSchema = new mongoose.Schema(
     budget: { type: String, enum: ["Bajo", "Medio", "Alto"], default: "Medio" },
     travelStyle: { type: [String], default: [] },
     interests: { type: [String], default: [] },
-    avatarUrl: { type: String, default: "https://picsum.photos/seed/me/200/200" },
+    avatarUrl: { type: String, default: "https://picsum.photos/seed/me/400/400" },
     destination: { type: String, required: true },
     dates: { type: String, default: "Próximamente" },
     language: { type: String, enum: ["es", "en"], default: "es" },
+    theme: { type: String, enum: ["light", "dark"], default: "light" },
   },
   {
     timestamps: true,

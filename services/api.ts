@@ -1,4 +1,4 @@
-import { UserProfile, LanguageCode } from "../types";
+import { UserProfile, LanguageCode, ThemeMode } from "../types";
 
 const API_BASE_URL = "http://localhost:4000/api";
 
@@ -17,6 +17,7 @@ export interface RegisterPayload {
   interests?: UserProfile["interests"];
   avatarUrl?: string;
   language?: LanguageCode;
+  theme?: ThemeMode;
 }
 
 export async function registerUser(
@@ -28,12 +29,21 @@ export async function registerUser(
     body: JSON.stringify(payload),
   });
 
-  if (!res.ok) {
-    const message = await res.text();
-    throw new Error(message || "Error al registrar usuario");
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch {
+    // ignoramos error de parseo, usamos texto plano si hace falta
   }
 
-  return (await res.json()) as UserProfile;
+  if (!res.ok) {
+    const message =
+      (data && typeof data === "object" && data.error) ||
+      "Error al registrar usuario";
+    throw new Error(message);
+  }
+
+  return data as UserProfile;
 }
 
 export async function loginUser(
@@ -46,12 +56,21 @@ export async function loginUser(
     body: JSON.stringify({ email, password }),
   });
 
-  if (!res.ok) {
-    const message = await res.text();
-    throw new Error(message || "Error al iniciar sesión");
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch {
+    // ignoramos error de parseo
   }
 
-  return (await res.json()) as UserProfile;
+  if (!res.ok) {
+    const message =
+      (data && typeof data === "object" && data.error) ||
+      "Error al iniciar sesión";
+    throw new Error(message);
+  }
+
+  return data as UserProfile;
 }
 
 export async function updateUserProfile(

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { UserProfile, LanguageCode } from '../types';
-import { Plane, Save, Camera, Globe2, ChevronLeft } from 'lucide-react';
+import { UserProfile, LanguageCode, ThemeMode } from '../types';
+import { Plane, Save, Camera, Globe2, ChevronLeft, Moon, SunMedium } from 'lucide-react';
 import { Button } from './Button';
 
 interface ProfileViewProps {
@@ -9,6 +9,8 @@ interface ProfileViewProps {
   onLogout: () => void;
   language: LanguageCode;
   onChangeLanguage: (lang: LanguageCode) => void;
+  theme: ThemeMode;
+  onChangeTheme: (mode: ThemeMode) => void;
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
@@ -17,6 +19,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   onLogout,
   language,
   onChangeLanguage,
+  theme,
+  onChangeTheme,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserProfile>(currentUser);
@@ -147,7 +151,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
        </div>
 
        <div className="space-y-4">
-         <div className="bg-gray-50 p-4 rounded-xl">
+         <div className="bg-gray-50 p-4 rounded-xl space-y-3">
            <h3 className="text-xs font-bold text-gray-400 uppercase mb-2">Ajustes</h3>
            <div className="flex items-center justify-between">
              <div className="flex items-center gap-2 text-gray-700">
@@ -159,6 +163,23 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                className="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-gray-200 hover:bg-gray-100"
              >
                {language === 'es' ? 'Español' : 'English'}
+             </button>
+           </div>
+
+           <div className="flex items-center justify-between">
+             <div className="flex items-center gap-2 text-gray-700">
+               {theme === 'dark' ? (
+                 <Moon size={18} className="text-travel-primary" />
+               ) : (
+                 <SunMedium size={18} className="text-travel-primary" />
+               )}
+               <span className="font-medium text-sm">Modo oscuro</span>
+             </div>
+             <button
+               onClick={() => onChangeTheme(theme === 'dark' ? 'light' : 'dark')}
+               className="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-gray-200 hover:bg-gray-100"
+             >
+               {theme === 'dark' ? 'Desactivar' : 'Activar'}
              </button>
            </div>
          </div>

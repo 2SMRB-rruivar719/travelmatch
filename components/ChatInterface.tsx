@@ -11,7 +11,7 @@ const INITIAL_CHATS: ChatThreadType[] = [
   {
     id: '1',
     name: 'Grupo: Viaje a Japón',
-    avatarUrl: 'https://picsum.photos/seed/japan/100/100',
+    avatarUrl: 'https://picsum.photos/seed/japan/300/300',
     lastMessage: '¿Ya reservaron el hotel?',
     lastMessageTime: '10:30',
     unread: 2,
@@ -25,7 +25,7 @@ const INITIAL_CHATS: ChatThreadType[] = [
   {
     id: '2',
     name: 'Carlos Ruiz',
-    avatarUrl: 'https://picsum.photos/seed/carlos/100/100',
+    avatarUrl: 'https://picsum.photos/seed/carlos/300/300',
     lastMessage: 'Me encanta la idea de ir a Kioto.',
     lastMessageTime: 'Ayer',
     unread: 0,
@@ -39,7 +39,7 @@ const INITIAL_CHATS: ChatThreadType[] = [
   {
     id: '3',
     name: 'Sarah Miller',
-    avatarUrl: 'https://picsum.photos/seed/sarah/100/100',
+    avatarUrl: 'https://picsum.photos/seed/sarah/300/300',
     lastMessage: '¡Hola! Vi que coincidimos en fechas.',
     lastMessageTime: 'Ayer',
     unread: 1,

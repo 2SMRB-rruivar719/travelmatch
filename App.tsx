@@ -6,7 +6,7 @@ import { ItineraryBuilder } from './components/ItineraryBuilder';
 import { ChatInterface } from './components/ChatInterface';
 import { ProfileView } from './components/ProfileView';
 import { Login } from './components/Login';
-import { LanguageCode, UserProfile } from './types';
+import { LanguageCode, ThemeMode, UserProfile } from './types';
 import { Logo } from './components/Logo';
 import { updateUserProfile } from './services/api';
 
@@ -15,10 +15,12 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState('match');
   const [authView, setAuthView] = useState<'landing' | 'login' | 'register'>('landing');
   const [language, setLanguage] = useState<LanguageCode>('es');
+  const [theme, setTheme] = useState<ThemeMode>('light');
 
   const handleOnboardingComplete = (profile: UserProfile) => {
     setCurrentUser(profile);
     setLanguage(profile.language);
+    setTheme(profile.theme || 'light');
     setCurrentView('match');
   };
 
@@ -36,6 +38,7 @@ const App: React.FC = () => {
   const handleLoginSuccess = (user: UserProfile) => {
     setCurrentUser(user);
     setLanguage(user.language);
+    setTheme(user.theme || 'light');
     setCurrentView('match');
   };
 
@@ -45,6 +48,15 @@ const App: React.FC = () => {
       const updated = { ...currentUser, language: lang };
       setCurrentUser(updated);
       void updateUserProfile(updated.id, { language: lang });
+    }
+  };
+
+  const handleChangeTheme = (mode: ThemeMode) => {
+    setTheme(mode);
+    if (currentUser) {
+      const updated = { ...currentUser, theme: mode };
+      setCurrentUser(updated);
+      void updateUserProfile(updated.id, { theme: mode });
     }
   };
 
@@ -129,6 +141,8 @@ const App: React.FC = () => {
             onLogout={handleLogout}
             language={language}
             onChangeLanguage={handleChangeLanguage}
+            theme={theme}
+            onChangeTheme={handleChangeTheme}
           />
         );
       default:
@@ -136,8 +150,14 @@ const App: React.FC = () => {
     }
   };
 
+  const isDark = theme === 'dark';
+
   return (
-    <div className="bg-gray-50 min-h-screen font-sans text-gray-800">
+    <div
+      className={`min-h-screen font-sans ${
+        isDark ? 'bg-slate-900 text-gray-100' : 'bg-gray-50 text-gray-800'
+      }`}
+    >
       {renderContent()}
       {currentUser && <Navigation currentView={currentView} onChangeView={setCurrentView} />}
     </div>

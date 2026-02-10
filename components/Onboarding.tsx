@@ -65,10 +65,11 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) 
         interests: formData.interests || [],
         avatarUrl: formData.avatarUrl,
         language: 'es',
+        theme: 'light',
       });
       onComplete(created);
     } catch (err: any) {
-      setError('No se pudo completar el registro. Revisa los datos o intenta de nuevo.');
+      setError(err?.message || 'No se pudo completar el registro. Revisa los datos o intenta de nuevo.');
     } finally {
       setLoading(false);
     }
