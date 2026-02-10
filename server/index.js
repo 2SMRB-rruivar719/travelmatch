@@ -50,6 +50,10 @@ const userSchema = new mongoose.Schema(
 
 userSchema.set("toJSON", {
   transform: (_doc, ret) => {
+    // Mapear _id -> id y limpiar campos internos
+    ret.id = ret._id?.toString();
+    delete ret._id;
+    delete ret.__v;
     delete ret.passwordHash;
     return ret;
   },
@@ -81,6 +85,10 @@ app.post("/api/auth/register", async (req, res) => {
       return res
         .status(400)
         .json({ error: "Nombre, email, contraseña, rol y destino son obligatorios." });
+    }
+
+    if (!email.includes("@")) {
+      return res.status(400).json({ error: "Email inválido." });
     }
 
     if (!["cliente", "empresa"].includes(role)) {
@@ -133,6 +141,10 @@ app.post("/api/auth/login", async (req, res) => {
       return res
         .status(400)
         .json({ error: "Email y contraseña son obligatorios." });
+    }
+
+    if (!email.includes("@")) {
+      return res.status(400).json({ error: "Email inválido." });
     }
 
     const user = await User.findOne({ email });

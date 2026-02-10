@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from './Button';
 import { loginUser } from '../services/api';
 import { UserProfile } from '../types';
+import { ChevronLeft } from 'lucide-react';
 
 interface LoginProps {
   onLoginSuccess: (user: UserProfile) => void;
@@ -23,6 +24,11 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onBackToLanding })
       return;
     }
 
+    if (!email.includes('@')) {
+      setError('El email debe contener "@".');
+      return;
+    }
+
     try {
       setLoading(true);
       const user = await loginUser(email, password);
@@ -38,9 +44,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onBackToLanding })
     <div className="flex flex-col h-full p-6 max-w-md mx-auto animate-fade-in bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl mt-10 mb-20 border border-white">
       <button
         onClick={onBackToLanding}
-        className="text-sm text-gray-500 mb-4 hover:text-travel-primary text-left"
+        className="flex items-center gap-1 text-sm text-gray-500 mb-4 hover:text-travel-primary text-left"
       >
-        ← Volver
+        <ChevronLeft size={18} />
+        <span>Volver</span>
       </button>
       <h2 className="text-2xl font-bold text-travel-dark text-center mb-6">Iniciar sesión</h2>
       <form onSubmit={handleSubmit} className="space-y-4">

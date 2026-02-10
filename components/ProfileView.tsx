@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile, LanguageCode } from '../types';
-import { Plane, Save, X, Camera, Globe2 } from 'lucide-react';
+import { Plane, Save, Camera, Globe2, ChevronLeft } from 'lucide-react';
 import { Button } from './Button';
 
 interface ProfileViewProps {
@@ -34,11 +34,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   if (isEditing) {
     return (
       <div className="p-6 max-w-md mx-auto bg-white min-h-screen pb-24">
-        <div className="flex justify-between items-center mb-6 mt-4">
-          <h2 className="text-2xl font-bold text-travel-dark">Editar Perfil</h2>
+        <div className="flex items-center gap-2 mb-6 mt-4">
           <button onClick={handleCancel} className="p-2 hover:bg-gray-100 rounded-full">
-            <X size={24} className="text-gray-500" />
+            <ChevronLeft size={22} className="text-gray-600" />
           </button>
+          <h2 className="text-2xl font-bold text-travel-dark">Editar Perfil</h2>
         </div>
 
         <div className="space-y-6">
@@ -57,6 +57,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               type="text" 
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
+              className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-600">Email</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
             />
           </div>
@@ -133,6 +143,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
          </div>
          <h2 className="text-2xl font-bold mt-4 text-travel-dark">{currentUser.name}, {currentUser.age}</h2>
          <p className="text-gray-500">{currentUser.country}</p>
+         <p className="text-gray-500 text-sm mt-1">{currentUser.email}</p>
        </div>
 
        <div className="space-y-4">

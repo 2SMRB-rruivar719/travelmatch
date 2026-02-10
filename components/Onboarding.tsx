@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { UserProfile, TravelStyle, UserRole } from '../types';
 import { Button } from './Button';
-import { Compass, Calendar, DollarSign, MapPin, User, Check } from 'lucide-react';
+import { Compass, Calendar, DollarSign, MapPin, User, Check, ChevronLeft } from 'lucide-react';
 import { registerUser } from '../services/api';
 
 interface OnboardingProps {
   onComplete: (profile: UserProfile) => void;
+  onCancel?: () => void;
 }
 
-export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
+export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<Partial<UserProfile>>({
     travelStyle: [],
@@ -32,6 +33,10 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     }
     if (!email) {
       setError('El email es obligatorio.');
+      return;
+    }
+    if (!email.includes('@')) {
+      setError('El email debe contener "@".');
       return;
     }
     if (!password || password.length < 6) {
@@ -80,6 +85,16 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
 
   return (
     <div className="flex flex-col h-full p-6 max-w-md mx-auto animate-fade-in bg-white/50 backdrop-blur-sm rounded-2xl shadow-xl mt-4 mb-20 border border-white">
+      {onCancel && (
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex items-center gap-1 text-sm text-gray-500 mb-4 hover:text-travel-primary text-left"
+        >
+          <ChevronLeft size={18} />
+          <span>Volver</span>
+        </button>
+      )}
       <div className="flex-1">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-2 rounded-full mb-8">
@@ -258,6 +273,15 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
       </div>
 
       <div className="mt-6">
+        {step > 1 && (
+          <button
+            type="button"
+            onClick={() => setStep(p => Math.max(1, p - 1))}
+            className="mb-3 text-sm text-gray-500 hover:text-travel-primary"
+          >
+            ← Atrás
+          </button>
+        )}
         {error && (
           <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl p-2 mb-3">
             {error}

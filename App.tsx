@@ -69,7 +69,10 @@ const App: React.FC = () => {
                   <Logo className="w-24 h-24" variant="icon" />
                 </div>
               </div>
-              <Onboarding onComplete={handleOnboardingComplete} />
+              <Onboarding
+                onComplete={handleOnboardingComplete}
+                onCancel={() => setAuthView('landing')}
+              />
             </div>
           </div>
         );
