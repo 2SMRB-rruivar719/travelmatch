@@ -130,6 +130,25 @@ app.post("/api/auth/register", async (req, res) => {
     res.status(201).json(user.toJSON());
   } catch (err) {
     console.error("Error en registro:", err);
+
+    // Email duplicado (por índice único en Mongo)
+    if (err && err.code === 11000) {
+      return res.status(409).json({ error: "El email ya está registrado." });
+    }
+
+    // Errores de conexión o de servidor Mongo
+    const msg = typeof err?.message === "string" ? err.message : "";
+    if (
+      msg.includes("ECONNREFUSED") ||
+      msg.toLowerCase().includes("failed to connect") ||
+      msg.toLowerCase().includes("server selection")
+    ) {
+      return res.status(500).json({
+        error:
+          "No se pudo conectar a la base de datos. Asegúrate de que MongoDB esté en ejecución y que la URI sea correcta.",
+      });
+    }
+
     res.status(500).json({ error: "Error al registrar usuario" });
   }
 });

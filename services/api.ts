@@ -42,15 +42,23 @@ export async function registerUser(
   });
 
   let data: any = null;
+  let fallbackText: string | null = null;
+
   try {
     data = await res.json();
   } catch {
-    // ignoramos error de parseo, usamos texto plano si hace falta
+    // Si no es JSON válido, intentamos leer el cuerpo como texto
+    try {
+      fallbackText = await res.text();
+    } catch {
+      // ignoramos el error, nos quedamos sin cuerpo legible
+    }
   }
 
   if (!res.ok) {
     const message =
-      (data && typeof data === "object" && data.error) ||
+      (data && typeof data === "object" && (data.error || data.message)) ||
+      fallbackText ||
       "Error al registrar usuario";
     throw new Error(message);
   }
