@@ -2,21 +2,44 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# TravelMatch
 
-This contains everything you need to run your app locally.
+Aplicación para matching de viajeros + itinerarios con IA + backend Express/MongoDB.
 
-View your app in AI Studio: https://ai.studio/apps/temp/1
+## Requisitos
 
-Public URL (deploy): `https://travelmatch.ddns.net`
+- Node.js 22+
+- MongoDB en `localhost:27017`
 
-## Run Locally
+## Configuración
 
-**Prerequisites:**  Node.js
+Crear `.env.local` en la raíz:
 
+```bash
+GEMINI_API_KEY=tu_api_key
+# opcional: sobreescribir API base
+# VITE_API_BASE_URL=http://localhost:4000/api
+# opcional: sobreescribir URI Mongo
+# MONGODB_URI=mongodb://127.0.0.1:27017/travelmatch
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Instalación
+
+```bash
+npm install
+cd server && npm install
+```
+
+## Scripts principales (raíz)
+
+- `npm run dev`: frontend Vite
+- `npm run dev:server`: backend API
+- `npm run dev:full`: frontend + backend
+- `npm run typecheck`: verificación TypeScript
+- `npm run build`: build de producción
+- `npm run test:register`: prueba de registro contra API local
+
+## API de diagnóstico
+
+- `GET http://localhost:4000/api/health`
+  - devuelve estado de API y conexión de MongoDB (`mongoStateLabel`)
