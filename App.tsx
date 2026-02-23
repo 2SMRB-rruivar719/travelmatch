@@ -9,15 +9,19 @@ import { Login } from './components/Login';
 import { LanguageCode, ThemeMode, UserProfile } from './types';
 import { Logo } from './components/Logo';
 import { updateUserProfile } from './services/api';
+import { ToastProvider, useToast } from './components/ToastProvider';
 
-const App: React.FC = () => {
+const AppInner: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [currentView, setCurrentView] = useState('match');
   const [authView, setAuthView] = useState<'landing' | 'login' | 'register'>('landing');
   const [language, setLanguage] = useState<LanguageCode>('es');
   const [theme, setTheme] = useState<ThemeMode>('light');
+  const { showToast } = useToast();
 
   const handleOnboardingComplete = (profile: UserProfile) => {
+    console.log('[FLOW] Registro completado, usuario creado', profile);
+    showToast('Cuenta creada correctamente. ¡Bienvenido a TravelMatch! 🌍', 'success');
     setCurrentUser(profile);
     setLanguage(profile.language);
     setTheme(profile.theme || 'light');
@@ -25,17 +29,31 @@ const App: React.FC = () => {
   };
 
   const handleUpdateUser = (updatedProfile: UserProfile) => {
+    console.log('[FLOW] Guardando cambios de perfil', updatedProfile);
+    showToast('Guardando cambios de tu perfil...', 'info');
     setCurrentUser(updatedProfile);
-    void updateUserProfile(updatedProfile.id, updatedProfile);
+    void updateUserProfile(updatedProfile.id, updatedProfile)
+      .then(() => {
+        console.log('[FLOW] Perfil actualizado en el servidor');
+        showToast('Perfil actualizado correctamente.', 'success');
+      })
+      .catch((err) => {
+        console.error('[ERROR] Al actualizar perfil en servidor', err);
+        showToast('No se pudo guardar el perfil en el servidor.', 'error');
+      });
   };
 
   const handleLogout = () => {
+    console.log('[FLOW] Cerrar sesión');
+    showToast('Sesión cerrada correctamente.', 'info');
     setCurrentUser(null);
     setCurrentView('match');
     setAuthView('landing');
   };
 
   const handleLoginSuccess = (user: UserProfile) => {
+    console.log('[FLOW] Login correcto', user);
+    showToast('Has iniciado sesión correctamente.', 'success');
     setCurrentUser(user);
     setLanguage(user.language);
     setTheme(user.theme || 'light');
@@ -43,6 +61,11 @@ const App: React.FC = () => {
   };
 
   const handleChangeLanguage = (lang: LanguageCode) => {
+    console.log('[FLOW] Cambio de idioma', { from: language, to: lang });
+    showToast(
+      lang === 'es' ? 'Idioma cambiado a Español.' : 'Language changed to English.',
+      'info'
+    );
     setLanguage(lang);
     if (currentUser) {
       const updated = { ...currentUser, language: lang };
@@ -52,12 +75,29 @@ const App: React.FC = () => {
   };
 
   const handleChangeTheme = (mode: ThemeMode) => {
+    console.log('[FLOW] Cambio de tema', { from: theme, to: mode });
+    showToast(
+      mode === 'dark' ? 'Modo oscuro activado.' : 'Modo claro activado.',
+      'info'
+    );
     setTheme(mode);
     if (currentUser) {
       const updated = { ...currentUser, theme: mode };
       setCurrentUser(updated);
       void updateUserProfile(updated.id, { theme: mode });
     }
+  };
+
+  const goToRegister = () => {
+    console.log('[FLOW] Click en botón Registrarse (landing)');
+    showToast('Abriendo formulario de registro...', 'info');
+    setAuthView('register');
+  };
+
+  const goToLogin = () => {
+    console.log('[FLOW] Click en botón Iniciar sesión (landing)');
+    showToast('Abriendo pantalla de inicio de sesión...', 'info');
+    setAuthView('login');
   };
 
   const renderContent = () => {
@@ -113,13 +153,13 @@ const App: React.FC = () => {
 
             <div className="flex flex-col gap-3 max-w-sm mx-auto">
               <button
-                onClick={() => setAuthView('register')}
+                onClick={goToRegister}
                 className="w-full py-3 rounded-full bg-white text-travel-primary font-semibold shadow-lg hover:bg-gray-100 transition-colors"
               >
                 Registrarse
               </button>
               <button
-                onClick={() => setAuthView('login')}
+                onClick={goToLogin}
                 className="w-full py-3 rounded-full bg-transparent border border-white/80 text-white font-semibold hover:bg-white/10 transition-colors"
               >
                 Iniciar sesión
@@ -167,5 +207,11 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+const App: React.FC = () => (
+  <ToastProvider>
+    <AppInner />
+  </ToastProvider>
+);
 
 export default App;

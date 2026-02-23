@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UserProfile, ChatThreadType, Message } from '../types';
 import { ChevronLeft, Send, Phone, Video } from 'lucide-react';
 import { Button } from './Button';
+import { useToast } from './ToastProvider';
 
 interface ChatInterfaceProps {
   currentUser: UserProfile;
@@ -54,11 +55,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentUser }) => 
   const [chats, setChats] = useState<ChatThreadType[]>(INITIAL_CHATS);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
+  const { showToast } = useToast();
 
   const activeChat = chats.find(c => c.id === activeChatId);
 
   const handleSend = () => {
     if (!newMessage.trim() || !activeChatId) return;
+
+    console.log('[FLOW] Enviar mensaje de chat', { chatId: activeChatId, text: newMessage });
 
     setChats(prevChats => prevChats.map(chat => {
       if (chat.id === activeChatId) {
@@ -80,6 +84,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentUser }) => 
       return chat;
     }));
     setNewMessage('');
+    showToast('Mensaje enviado.', 'info');
   };
 
   if (activeChatId && activeChat) {
@@ -149,7 +154,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentUser }) => 
         {chats.map((chat) => (
           <div 
             key={chat.id} 
-            onClick={() => setActiveChatId(chat.id)}
+            onClick={() => {
+              console.log('[FLOW] Abrir conversación', { chatId: chat.id, name: chat.name });
+              showToast(`Abriendo chat con ${chat.name}`, 'info');
+              setActiveChatId(chat.id);
+            }}
             className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors border-b border-gray-50 cursor-pointer"
           >
             <div className="relative">

@@ -3,6 +3,7 @@ import { Button } from './Button';
 import { loginUser } from '../services/api';
 import { LanguageCode, UserProfile } from '../types';
 import { ChevronLeft } from 'lucide-react';
+import { useToast } from './ToastProvider';
 
 interface LoginProps {
   onLoginSuccess: (user: UserProfile) => void;
@@ -14,31 +15,45 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onBackToLanding })
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[FLOW] Click en Iniciar sesión', { email });
     setError(null);
 
     if (!email || !password) {
-      setError('Debes introducir email y contraseña.');
+      const msg = 'Debes introducir email y contraseña.';
+      console.warn('[VALIDATION] Login -', msg);
+      setError(msg);
+      showToast(msg, 'error');
       return;
     }
 
     if (!email.includes('@')) {
-      setError('El email debe contener "@".');
+      const msg = 'El email debe contener "@".';
+      console.warn('[VALIDATION] Login -', msg);
+      setError(msg);
+      showToast(msg, 'error');
       return;
     }
 
     try {
       setLoading(true);
+      showToast('Iniciando sesión...', 'info');
+      console.log('[API] Enviando petición de login a backend');
       const user = await loginUser(email, password);
+      console.log('[API] Login correcto, usuario recibido', user);
+      showToast('Sesión iniciada correctamente.', 'success');
       onLoginSuccess(user);
     } catch (err: any) {
       let msg = err?.message || 'Credenciales incorrectas o error al iniciar sesión.';
       if (typeof msg === 'string' && msg.toLowerCase().includes('failed to fetch')) {
         msg = 'Error de conexión al iniciar sesión. Revisa tu conexión o inténtalo de nuevo.';
       }
+      console.error('[ERROR] Error en login', err);
       setError(msg);
+      showToast(msg, 'error');
     } finally {
       setLoading(false);
     }

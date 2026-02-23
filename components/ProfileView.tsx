@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UserProfile, LanguageCode, ThemeMode } from '../types';
 import { Plane, Save, Camera, Globe2, ChevronLeft, Moon, SunMedium } from 'lucide-react';
 import { Button } from './Button';
+import { useToast } from './ToastProvider';
 
 interface ProfileViewProps {
   currentUser: UserProfile;
@@ -24,13 +25,17 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserProfile>(currentUser);
+  const { showToast } = useToast();
 
   const handleSave = () => {
+    console.log('[FLOW] Click en Guardar cambios de perfil', formData);
+    showToast('Guardando cambios de tu perfil...', 'info');
     onUpdateUser(formData);
     setIsEditing(false);
   };
 
   const handleCancel = () => {
+    console.log('[FLOW] Cancelar edición de perfil');
     setFormData(currentUser);
     setIsEditing(false);
   };

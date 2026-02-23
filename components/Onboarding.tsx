@@ -3,6 +3,7 @@ import { UserProfile, TravelStyle, UserRole, LanguageCode } from '../types';
 import { Button } from './Button';
 import { Compass, Calendar, DollarSign, MapPin, User, Check, ChevronLeft } from 'lucide-react';
 import { registerUser } from '../services/api';
+import { useToast } from './ToastProvider';
 
 interface OnboardingProps {
   onComplete: (profile: UserProfile) => void;
@@ -23,10 +24,64 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
   const [role, setRole] = useState<UserRole>('cliente');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
 
-  const handleNext = () => setStep(p => p + 1);
+  const handleNext = () => {
+    console.log('[FLOW] Click en Siguiente en onboarding', { step, formData, email });
+    // Validar campos del paso 1 antes de avanzar
+    if (step === 1) {
+      setError(null);
+      
+      if (!formData.name || formData.name.trim() === '') {
+        const msg = 'El nombre es obligatorio.';
+        console.warn('[VALIDATION] Registro -', msg);
+        setError(msg);
+        return;
+      }
+      
+      if (!formData.destination || formData.destination.trim() === '') {
+        const msg = 'El destino es obligatorio.';
+        console.warn('[VALIDATION] Registro -', msg);
+        setError(msg);
+        return;
+      }
+      
+      if (!email || email.trim() === '') {
+        const msg = 'El email es obligatorio.';
+        console.warn('[VALIDATION] Registro -', msg);
+        setError(msg);
+        return;
+      }
+      
+      if (!email.includes('@') || !email.includes('.')) {
+        const msg = 'El email debe tener un formato válido (ejemplo@dominio.com).';
+        console.warn('[VALIDATION] Registro -', msg);
+        setError(msg);
+        return;
+      }
+      
+      if (!password || password.length < 6) {
+        const msg = 'La contraseña debe tener al menos 6 caracteres.';
+        console.warn('[VALIDATION] Registro -', msg);
+        setError(msg);
+        return;
+      }
+      
+      if (password !== passwordConfirm) {
+        const msg = 'Las contraseñas no coinciden.';
+        console.warn('[VALIDATION] Registro -', msg);
+        setError(msg);
+        return;
+      }
+    }
+    
+    console.log('[FLOW] Avanzando al siguiente paso de onboarding', { from: step, to: step + 1 });
+    setStep(p => p + 1);
+  };
 
   const handleBack = () => {
+    console.log('[FLOW] Click en Volver en onboarding', { step });
+    setError(null);
     if (step > 1) {
       setStep(p => Math.max(1, p - 1));
     } else if (onCancel) {
@@ -35,30 +90,56 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
   };
   
   const handleComplete = async () => {
+    console.log('[FLOW] Click en Comenzar Aventura', { formData, email, role });
     setError(null);
-    if (!formData.name || !formData.destination) {
-      setError('Nombre y destino son obligatorios.');
+    
+    // Validaciones completas antes de enviar
+    if (!formData.name || formData.name.trim() === '') {
+      const msg = 'El nombre es obligatorio.';
+      console.warn('[VALIDATION] Registro -', msg);
+      setError(msg);
       return;
     }
-    if (!email) {
-      setError('El email es obligatorio.');
+    
+    if (!formData.destination || formData.destination.trim() === '') {
+      const msg = 'El destino es obligatorio.';
+      console.warn('[VALIDATION] Registro -', msg);
+      setError(msg);
       return;
     }
-    if (!email.includes('@')) {
-      setError('El email debe contener "@".');
+    
+    if (!email || email.trim() === '') {
+      const msg = 'El email es obligatorio.';
+      console.warn('[VALIDATION] Registro -', msg);
+      setError(msg);
       return;
     }
+    
+    if (!email.includes('@') || !email.includes('.')) {
+      const msg = 'El email debe tener un formato válido (ejemplo@dominio.com).';
+      console.warn('[VALIDATION] Registro -', msg);
+      setError(msg);
+      return;
+    }
+    
     if (!password || password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
+      const msg = 'La contraseña debe tener al menos 6 caracteres.';
+      console.warn('[VALIDATION] Registro -', msg);
+      setError(msg);
       return;
     }
+    
     if (password !== passwordConfirm) {
-      setError('Las contraseñas no coinciden.');
+      const msg = 'Las contraseñas no coinciden.';
+      console.warn('[VALIDATION] Registro -', msg);
+      setError(msg);
       return;
     }
 
     try {
       setLoading(true);
+      showToast('Creando tu cuenta...', 'info');
+      console.log('[API] Enviando petición de registro a backend');
       const created = await registerUser({
         name: formData.name,
         email,
@@ -76,18 +157,37 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
         language: 'es',
         theme: 'light',
       });
+      console.log('[API] Usuario creado correctamente en backend', created);
+      showToast('Cuenta creada correctamente.', 'success');
       onComplete(created);
     } catch (err: any) {
-      let msg =
-        err?.message ||
-        'No se pudo completar el registro. Revisa los datos o intenta de nuevo.';
-      if (typeof msg === 'string' && msg.toLowerCase().includes('failed to fetch')) {
-        msg =
-          language === 'en'
-            ? 'Network error while creating your account. Please check your connection or try again.'
-            : 'Error de conexión al crear tu cuenta. Revisa tu conexión o inténtalo de nuevo.';
+      let msg = 'No se pudo completar el registro. Revisa los datos o intenta de nuevo.';
+      
+      if (err?.message) {
+        msg = err.message;
       }
+      
+      // Manejar errores de red
+      if (typeof msg === 'string' && (
+        msg.toLowerCase().includes('failed to fetch') ||
+        msg.toLowerCase().includes('network') ||
+        msg.toLowerCase().includes('fetch')
+      )) {
+        msg = language === 'en'
+          ? 'Network error. Please check your connection and make sure the server is running.'
+          : 'Error de conexión. Revisa tu conexión y asegúrate de que el servidor esté en ejecución.';
+      }
+      
+      // Manejar errores de base de datos
+      if (typeof msg === 'string' && msg.toLowerCase().includes('base de datos')) {
+        msg = language === 'en'
+          ? 'Database connection error. Please check that MongoDB is running.'
+          : 'Error de conexión a la base de datos. Asegúrate de que MongoDB esté en ejecución.';
+      }
+      
       setError(msg);
+      console.error('[ERROR] Error en registro', err);
+      showToast(msg, 'error');
     } finally {
       setLoading(false);
     }
@@ -171,7 +271,10 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
                 className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
                 placeholder="tucorreo@ejemplo.com"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={e => {
+                  setEmail(e.target.value);
+                  if (error) setError(null);
+                }}
               />
             </div>
 
@@ -182,8 +285,14 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
                 className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
                 placeholder="Mínimo 6 caracteres"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={e => {
+                  setPassword(e.target.value);
+                  if (error) setError(null);
+                }}
               />
+              {password && password.length > 0 && password.length < 6 && (
+                <p className="text-xs text-orange-600">La contraseña debe tener al menos 6 caracteres</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -193,8 +302,14 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
                 className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
                 placeholder="Repite la contraseña"
                 value={passwordConfirm}
-                onChange={e => setPasswordConfirm(e.target.value)}
+                onChange={e => {
+                  setPasswordConfirm(e.target.value);
+                  if (error) setError(null);
+                }}
               />
+              {passwordConfirm && passwordConfirm !== password && password.length >= 6 && (
+                <p className="text-xs text-red-600">Las contraseñas no coinciden</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -299,7 +414,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
           <Button 
             fullWidth 
             onClick={handleNext}
-            disabled={step === 1 && (!formData.name || !formData.destination || !email)}
+            disabled={loading}
           >
             Siguiente
           </Button>

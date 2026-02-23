@@ -84,14 +84,29 @@ app.post("/api/auth/register", async (req, res) => {
       theme,
     } = req.body;
 
-    if (!name || !email || !password || !role || !destination) {
-      return res
-        .status(400)
-        .json({ error: "Nombre, email, contraseña, rol y destino son obligatorios." });
+    // Validaciones más específicas
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      return res.status(400).json({ error: "El nombre es obligatorio." });
+    }
+    
+    if (!email || typeof email !== 'string' || email.trim() === '') {
+      return res.status(400).json({ error: "El email es obligatorio." });
+    }
+    
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ error: "La contraseña es obligatoria." });
+    }
+    
+    if (!role || typeof role !== 'string') {
+      return res.status(400).json({ error: "El rol es obligatorio." });
+    }
+    
+    if (!destination || typeof destination !== 'string' || destination.trim() === '') {
+      return res.status(400).json({ error: "El destino es obligatorio." });
     }
 
-    if (!email.includes("@")) {
-      return res.status(400).json({ error: "Email inválido." });
+    if (!email.includes("@") || !email.includes(".") || email.length < 5) {
+      return res.status(400).json({ error: "El email debe tener un formato válido (ejemplo@dominio.com)." });
     }
 
     if (!["cliente", "empresa"].includes(role)) {
@@ -111,23 +126,28 @@ app.post("/api/auth/register", async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
-      name,
-      email,
+    // Limpiar valores undefined para que MongoDB use los defaults del schema
+    const userData = {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
       passwordHash,
       role,
-      age,
-      country,
-      bio,
-      budget,
-      travelStyle,
-      interests,
-      avatarUrl,
-      destination,
-      dates,
-      language,
-      theme,
-    });
+      destination: destination.trim(),
+    };
+    
+    // Solo añadir campos opcionales si tienen valor
+    if (age !== undefined && age !== null) userData.age = Number(age);
+    if (country && country.trim()) userData.country = country.trim();
+    if (bio && bio.trim()) userData.bio = bio.trim();
+    if (budget) userData.budget = budget;
+    if (travelStyle && Array.isArray(travelStyle)) userData.travelStyle = travelStyle;
+    if (interests && Array.isArray(interests)) userData.interests = interests;
+    if (avatarUrl && avatarUrl.trim()) userData.avatarUrl = avatarUrl.trim();
+    if (dates && dates.trim()) userData.dates = dates.trim();
+    if (language) userData.language = language;
+    if (theme) userData.theme = theme;
+
+    const user = await User.create(userData);
 
     res.status(201).json(user.toJSON());
   } catch (err) {
