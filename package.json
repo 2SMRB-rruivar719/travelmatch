@@ -8,8 +8,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server/index.js",
+<<<<<<< HEAD
     "test:register": "node test-register.mjs",
     "start": "start npm run server && npm run preview"
+=======
+    "test:register": "node test-register.mjs"
+>>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
   },
   "dependencies": {
     "@google/genai": "^1.35.0",

@@ -8,16 +8,18 @@ import { ProfileView } from './components/ProfileView';
 import { Login } from './components/Login';
 import { LanguageCode, ThemeMode, UserProfile } from './types';
 import { Logo } from './components/Logo';
-import { updateUserProfile } from './services/api';
-import { ToastProvider, useToast } from './components/ToastProvider';
 
 const AppInner: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [currentView, setCurrentView] = useState('match');
-  const [authView, setAuthView] = useState<'landing' | 'login' | 'register'>('landing');
-  const [language, setLanguage] = useState<LanguageCode>('es');
-  const [theme, setTheme] = useState<ThemeMode>('light');
-  const { showToast } = useToast();
+
+  // Load user from local storage (mock persistence)
+  React.useEffect(() => {
+    const savedUser = localStorage.getItem('tm_user');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    }
+  }, []);
 
   const handleOnboardingComplete = (profile: UserProfile) => {
     console.log('[FLOW] Registro completado, usuario creado', profile);
@@ -32,72 +34,13 @@ const AppInner: React.FC = () => {
     console.log('[FLOW] Guardando cambios de perfil', updatedProfile);
     showToast('Guardando cambios de tu perfil...', 'info');
     setCurrentUser(updatedProfile);
-    void updateUserProfile(updatedProfile.id, updatedProfile)
-      .then(() => {
-        console.log('[FLOW] Perfil actualizado en el servidor');
-        showToast('Perfil actualizado correctamente.', 'success');
-      })
-      .catch((err) => {
-        console.error('[ERROR] Al actualizar perfil en servidor', err);
-        showToast('No se pudo guardar el perfil en el servidor.', 'error');
-      });
+    localStorage.setItem('tm_user', JSON.stringify(updatedProfile));
   };
 
   const handleLogout = () => {
-    console.log('[FLOW] Cerrar sesión');
-    showToast('Sesión cerrada correctamente.', 'info');
+    localStorage.removeItem('tm_user');
     setCurrentUser(null);
     setCurrentView('match');
-    setAuthView('landing');
-  };
-
-  const handleLoginSuccess = (user: UserProfile) => {
-    console.log('[FLOW] Login correcto', user);
-    showToast('Has iniciado sesión correctamente.', 'success');
-    setCurrentUser(user);
-    setLanguage(user.language);
-    setTheme(user.theme || 'light');
-    setCurrentView('match');
-  };
-
-  const handleChangeLanguage = (lang: LanguageCode) => {
-    console.log('[FLOW] Cambio de idioma', { from: language, to: lang });
-    showToast(
-      lang === 'es' ? 'Idioma cambiado a Español.' : 'Language changed to English.',
-      'info'
-    );
-    setLanguage(lang);
-    if (currentUser) {
-      const updated = { ...currentUser, language: lang };
-      setCurrentUser(updated);
-      void updateUserProfile(updated.id, { language: lang });
-    }
-  };
-
-  const handleChangeTheme = (mode: ThemeMode) => {
-    console.log('[FLOW] Cambio de tema', { from: theme, to: mode });
-    showToast(
-      mode === 'dark' ? 'Modo oscuro activado.' : 'Modo claro activado.',
-      'info'
-    );
-    setTheme(mode);
-    if (currentUser) {
-      const updated = { ...currentUser, theme: mode };
-      setCurrentUser(updated);
-      void updateUserProfile(updated.id, { theme: mode });
-    }
-  };
-
-  const goToRegister = () => {
-    console.log('[FLOW] Click en botón Registrarse (landing)');
-    showToast('Abriendo formulario de registro...', 'info');
-    setAuthView('register');
-  };
-
-  const goToLogin = () => {
-    console.log('[FLOW] Click en botón Iniciar sesión (landing)');
-    showToast('Abriendo pantalla de inicio de sesión...', 'info');
-    setAuthView('login');
   };
 
   const renderContent = () => {
@@ -137,34 +80,23 @@ const AppInner: React.FC = () => {
       // Landing inicial con botones de acceso
       return (
         <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')] bg-cover bg-center">
-          <div className="min-h-screen bg-travel-primary/90 backdrop-blur-sm flex flex-col p-6 overflow-y-auto">
-            <div className="flex flex-col items-center justify-center gap-6 mt-20 mb-10 animate-fade-in-up">
-              <div className="bg-white/90 p-8 rounded-[2.5rem] backdrop-blur-md border border-white/50 shadow-2xl transform hover:scale-105 transition-transform duration-300">
-                <Logo className="w-32 h-32" variant="icon" />
-              </div>
-              <div className="bg-[#f4e8c1] p-5 px-8 rounded-2xl shadow-xl border-4 border-white">
-                <Logo className="w-auto" variant="text" />
-              </div>
-            </div>
-
-            <p className="text-white/95 text-center mb-8 max-w-sm mx-auto text-lg font-medium drop-shadow-md tracking-wide">
-              Encuentra compañeros de viaje, planifica con IA y explora el mundo.
-            </p>
-
-            <div className="flex flex-col gap-3 max-w-sm mx-auto">
-              <button
-                onClick={goToRegister}
-                className="w-full py-3 rounded-full bg-white text-travel-primary font-semibold shadow-lg hover:bg-gray-100 transition-colors"
-              >
-                Registrarse
-              </button>
-              <button
-                onClick={goToLogin}
-                className="w-full py-3 rounded-full bg-transparent border border-white/80 text-white font-semibold hover:bg-white/10 transition-colors"
-              >
-                Iniciar sesión
-              </button>
-            </div>
+          <div className="min-h-screen bg-travel-primary/90 backdrop-blur-sm flex flex-col p-4 overflow-y-auto">
+             <div className="flex flex-col items-center justify-center gap-6 mt-16 mb-8 animate-fade-in-up">
+                {/* Logo Icon in Glass Bubble */}
+                <div className="bg-white/90 p-8 rounded-[2.5rem] backdrop-blur-md border border-white/50 shadow-2xl transform hover:scale-105 transition-transform duration-300">
+                  <Logo className="w-32 h-32" variant="icon" />
+                </div>
+                
+                {/* Text Logo with Cream Background (#f4e8c1) - Straight (removed rotation) */}
+                <div className="bg-[#f4e8c1] p-5 px-8 rounded-2xl shadow-xl border-4 border-white">
+                  <Logo className="w-auto" variant="text" />
+                </div>
+             </div>
+             
+             <p className="text-white/95 text-center mb-8 max-w-xs mx-auto text-lg font-medium drop-shadow-md tracking-wide">
+               Encuentra compañeros de viaje, planifica con IA y explora el mundo.
+             </p>
+             <Onboarding onComplete={handleOnboardingComplete} />
           </div>
         </div>
       );

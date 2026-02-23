@@ -81,6 +81,7 @@ app.post("/api/auth/register", async (req, res) => {
       destination,
       dates,
       language,
+<<<<<<< HEAD
       theme,
     } = req.body;
 
@@ -107,6 +108,18 @@ app.post("/api/auth/register", async (req, res) => {
 
     if (!email.includes("@") || !email.includes(".") || email.length < 5) {
       return res.status(400).json({ error: "El email debe tener un formato válido (ejemplo@dominio.com)." });
+=======
+    } = req.body;
+
+    if (!name || !email || !password || !role || !destination) {
+      return res
+        .status(400)
+        .json({ error: "Nombre, email, contraseña, rol y destino son obligatorios." });
+    }
+
+    if (!email.includes("@")) {
+      return res.status(400).json({ error: "Email inválido." });
+>>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
     }
 
     if (!["cliente", "empresa"].includes(role)) {
@@ -126,6 +139,7 @@ app.post("/api/auth/register", async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+<<<<<<< HEAD
     // Limpiar valores undefined para que MongoDB use los defaults del schema
     const userData = {
       name: name.trim(),
@@ -148,6 +162,24 @@ app.post("/api/auth/register", async (req, res) => {
     if (theme) userData.theme = theme;
 
     const user = await User.create(userData);
+=======
+    const user = await User.create({
+      name,
+      email,
+      passwordHash,
+      role,
+      age,
+      country,
+      bio,
+      budget,
+      travelStyle,
+      interests,
+      avatarUrl,
+      destination,
+      dates,
+      language,
+    });
+>>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
 
     res.status(201).json(user.toJSON());
   } catch (err) {

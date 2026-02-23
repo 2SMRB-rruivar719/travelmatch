@@ -77,6 +77,7 @@ export async function loginUser(
   });
 
   let data: any = null;
+<<<<<<< HEAD
   let fallbackText: string | null = null;
 
   try {
@@ -88,16 +89,27 @@ export async function loginUser(
     } catch {
       // ignoramos el error, nos quedamos sin cuerpo legible
     }
+=======
+  try {
+    data = await res.json();
+  } catch {
+    // ignoramos error de parseo
+>>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
   }
 
   if (!res.ok) {
     const message =
+<<<<<<< HEAD
       (data && typeof data === "object" && (data.error || data.message)) ||
       fallbackText ||
+=======
+      (data && typeof data === "object" && data.error) ||
+>>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
       "Error al iniciar sesión";
     throw new Error(message);
   }
 
+<<<<<<< HEAD
   // El servidor respondió 200 pero el cuerpo no es un JSON de usuario válido
   if (!data || typeof data !== "object") {
     throw new Error(
@@ -105,6 +117,8 @@ export async function loginUser(
     );
   }
 
+=======
+>>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
   return data as UserProfile;
 }
 
