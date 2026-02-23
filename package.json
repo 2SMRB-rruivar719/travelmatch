@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "server": "node server/index.js",
     "test:register": "node test-register.mjs",
-    "start": "start npm run server && npm run preview"
+    "start": "npm run server & npm run preview"
   },
   "dependencies": {
     "@google/genai": "^1.35.0",
