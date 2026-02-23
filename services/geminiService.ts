@@ -10,7 +10,7 @@ const MODEL_NAME = 'gemini-3-flash-preview';
 export const generatePotentialMatches = async (userProfile: UserProfile): Promise<UserProfile[]> => {
   try {
     const prompt = `
-      Generate 3 fictional traveler profiles that would be a good match for someone with the following profile:
+      Generate 8 fictional traveler profiles that would be a good match for someone with the following profile:
       Name: ${userProfile.name}
       Age: ${userProfile.age}
       Budget: ${userProfile.budget}
@@ -57,16 +57,16 @@ export const generatePotentialMatches = async (userProfile: UserProfile): Promis
 
     const data = JSON.parse(response.text || '[]');
     
-    // Enrich with avatar URLs (mock images)
+    // Enrich with avatar URLs (mock images, alta resolución)
     return data.map((profile: any, index: number) => ({
       ...profile,
       id: `match-${index}-${Date.now()}`,
-      avatarUrl: `https://picsum.photos/seed/${profile.name.replace(' ', '')}/200/200`
+      avatarUrl: `https://picsum.photos/seed/${profile.name.replace(' ', '')}/600/600`
     }));
 
   } catch (error) {
     console.error("Error generating matches:", error);
-    // Return fallback data if API fails
+    // Return fallback data if API fails (varios usuarios)
     return [
       {
         id: 'fallback-1',
@@ -77,9 +77,30 @@ export const generatePotentialMatches = async (userProfile: UserProfile): Promis
         budget: 'Medio',
         travelStyle: [TravelStyle.CULTURAL, TravelStyle.BACKPACKER],
         interests: ['Fotografía', 'Historia'],
-        avatarUrl: 'https://picsum.photos/seed/elena/200/200',
+        avatarUrl: 'https://picsum.photos/seed/elena/600/600',
         destination: userProfile.destination,
-        dates: userProfile.dates
+        dates: userProfile.dates,
+        email: 'elena@example.com',
+        role: 'cliente',
+        language: 'es',
+        theme: 'light',
+      },
+      {
+        id: 'fallback-2',
+        name: 'Marco Silva',
+        age: 30,
+        country: 'Brasil',
+        bio: 'Apasionado por la naturaleza y el trekking.',
+        budget: 'Bajo',
+        travelStyle: [TravelStyle.ADVENTURE, TravelStyle.BACKPACKER],
+        interests: ['Senderismo', 'Playas'],
+        avatarUrl: 'https://picsum.photos/seed/marco/600/600',
+        destination: userProfile.destination,
+        dates: userProfile.dates,
+        email: 'marco@example.com',
+        role: 'cliente',
+        language: 'es',
+        theme: 'light',
       }
     ];
   }

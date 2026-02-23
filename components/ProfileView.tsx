@@ -1,15 +1,27 @@
 import React, { useState } from 'react';
-import { UserProfile } from '../types';
-import { Plane, Save, X, Camera } from 'lucide-react';
+import { UserProfile, LanguageCode, ThemeMode } from '../types';
+import { Plane, Save, Camera, Globe2, ChevronLeft, Moon, SunMedium } from 'lucide-react';
 import { Button } from './Button';
 
 interface ProfileViewProps {
   currentUser: UserProfile;
   onUpdateUser: (user: UserProfile) => void;
   onLogout: () => void;
+  language: LanguageCode;
+  onChangeLanguage: (lang: LanguageCode) => void;
+  theme: ThemeMode;
+  onChangeTheme: (mode: ThemeMode) => void;
 }
 
-export const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateUser, onLogout }) => {
+export const ProfileView: React.FC<ProfileViewProps> = ({
+  currentUser,
+  onUpdateUser,
+  onLogout,
+  language,
+  onChangeLanguage,
+  theme,
+  onChangeTheme,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserProfile>(currentUser);
 
@@ -26,11 +38,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateU
   if (isEditing) {
     return (
       <div className="p-6 max-w-md mx-auto bg-white min-h-screen pb-24">
-        <div className="flex justify-between items-center mb-6 mt-4">
-          <h2 className="text-2xl font-bold text-travel-dark">Editar Perfil</h2>
+        <div className="flex items-center gap-2 mb-6 mt-4">
           <button onClick={handleCancel} className="p-2 hover:bg-gray-100 rounded-full">
-            <X size={24} className="text-gray-500" />
+            <ChevronLeft size={22} className="text-gray-600" />
           </button>
+          <h2 className="text-2xl font-bold text-travel-dark">Editar Perfil</h2>
         </div>
 
         <div className="space-y-6">
@@ -49,6 +61,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateU
               type="text" 
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
+              className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-600">Email</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
             />
           </div>
@@ -125,9 +147,43 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateU
          </div>
          <h2 className="text-2xl font-bold mt-4 text-travel-dark">{currentUser.name}, {currentUser.age}</h2>
          <p className="text-gray-500">{currentUser.country}</p>
+         <p className="text-gray-500 text-sm mt-1">{currentUser.email}</p>
        </div>
 
        <div className="space-y-4">
+         <div className="bg-gray-50 p-4 rounded-xl space-y-3">
+           <h3 className="text-xs font-bold text-gray-400 uppercase mb-2">Ajustes</h3>
+           <div className="flex items-center justify-between">
+             <div className="flex items-center gap-2 text-gray-700">
+               <Globe2 size={18} className="text-travel-primary" />
+               <span className="font-medium text-sm">Idioma</span>
+             </div>
+             <button
+               onClick={() => onChangeLanguage(language === 'es' ? 'en' : 'es')}
+               className="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-gray-200 hover:bg-gray-100"
+             >
+               {language === 'es' ? 'Español' : 'English'}
+             </button>
+           </div>
+
+           <div className="flex items-center justify-between">
+             <div className="flex items-center gap-2 text-gray-700">
+               {theme === 'dark' ? (
+                 <Moon size={18} className="text-travel-primary" />
+               ) : (
+                 <SunMedium size={18} className="text-travel-primary" />
+               )}
+               <span className="font-medium text-sm">Modo oscuro</span>
+             </div>
+             <button
+               onClick={() => onChangeTheme(theme === 'dark' ? 'light' : 'dark')}
+               className="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-gray-200 hover:bg-gray-100"
+             >
+               {theme === 'dark' ? 'Desactivar' : 'Activar'}
+             </button>
+           </div>
+         </div>
+
          <div className="bg-gray-50 p-4 rounded-xl">
            <h3 className="text-xs font-bold text-gray-400 uppercase mb-2">Próximo destino</h3>
            <div className="flex items-center gap-2 text-travel-dark font-semibold">

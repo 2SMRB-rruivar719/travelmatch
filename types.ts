@@ -7,9 +7,14 @@ export enum TravelStyle {
   PARTY = 'Fiesta'
 }
 
+export type UserRole = 'cliente' | 'empresa';
+export type LanguageCode = 'es' | 'en';
+export type ThemeMode = 'light' | 'dark';
+
 export interface UserProfile {
   id: string;
   name: string;
+  email: string;
   age: number;
   country: string;
   bio: string;
@@ -19,6 +24,9 @@ export interface UserProfile {
   avatarUrl: string;
   destination: string;
   dates: string;
+  role: UserRole;
+  language: LanguageCode;
+   theme: ThemeMode;
 }
 
 export interface ItineraryDay {
