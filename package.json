@@ -17,7 +17,6 @@
     "start:full": "npm run server & npm run preview"
   },
   "dependencies": {
-    "@google/genai": "^1.42.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",

@@ -177,15 +177,32 @@ const AppInner: React.FC = () => {
   };
 
   const isDark = theme === 'dark';
+  const isAuthenticated = !!currentUser;
 
   return (
     <div
       className={`min-h-screen font-sans ${
-        isDark ? 'bg-slate-900 text-gray-100' : 'bg-gray-50 text-gray-800'
+        isDark
+          ? 'bg-slate-900 text-gray-100'
+          : isAuthenticated
+            ? 'bg-gradient-to-br from-[#f9f9f9] via-white to-travel-secondary/30 text-gray-800'
+            : 'bg-gray-50 text-gray-800'
       }`}
     >
-      {renderContent()}
-      {currentUser && <Navigation currentView={currentView} onChangeView={setCurrentView} />}
+      {isAuthenticated ? (
+        <div className="min-h-screen lg:pl-72">
+          <div className="mx-auto w-full lg:max-w-[1360px]">{renderContent()}</div>
+        </div>
+      ) : (
+        renderContent()
+      )}
+      {currentUser && (
+        <Navigation
+          currentView={currentView}
+          onChangeView={setCurrentView}
+          currentUser={currentUser}
+        />
+      )}
     </div>
   );
 };
