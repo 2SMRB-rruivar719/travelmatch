@@ -3,10 +3,7 @@ import { UserProfile, TravelStyle, UserRole, LanguageCode } from '../types';
 import { Button } from './Button';
 import { Compass, Calendar, DollarSign, MapPin, User, Check, ChevronLeft } from 'lucide-react';
 import { registerUser } from '../services/api';
-<<<<<<< HEAD
 import { useToast } from './ToastProvider';
-=======
->>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
 
 interface OnboardingProps {
   onComplete: (profile: UserProfile) => void;
@@ -27,7 +24,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
   const [role, setRole] = useState<UserRole>('cliente');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-<<<<<<< HEAD
   const { showToast } = useToast();
 
   const handleNext = () => {
@@ -86,12 +82,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
   const handleBack = () => {
     console.log('[FLOW] Click en Volver en onboarding', { step });
     setError(null);
-=======
-
-  const handleNext = () => setStep(p => p + 1);
-
-  const handleBack = () => {
->>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
     if (step > 1) {
       setStep(p => Math.max(1, p - 1));
     } else if (onCancel) {
@@ -100,7 +90,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
   };
   
   const handleComplete = async () => {
-<<<<<<< HEAD
     console.log('[FLOW] Click en Comenzar Aventura', { formData, email, role });
     setError(null);
     
@@ -144,37 +133,13 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
       const msg = 'Las contraseñas no coinciden.';
       console.warn('[VALIDATION] Registro -', msg);
       setError(msg);
-=======
-    setError(null);
-    if (!formData.name || !formData.destination) {
-      setError('Nombre y destino son obligatorios.');
-      return;
-    }
-    if (!email) {
-      setError('El email es obligatorio.');
-      return;
-    }
-    if (!email.includes('@')) {
-      setError('El email debe contener "@".');
-      return;
-    }
-    if (!password || password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
-      return;
-    }
-    if (password !== passwordConfirm) {
-      setError('Las contraseñas no coinciden.');
->>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
       return;
     }
 
     try {
       setLoading(true);
-<<<<<<< HEAD
       showToast('Creando tu cuenta...', 'info');
       console.log('[API] Enviando petición de registro a backend');
-=======
->>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
       const created = await registerUser({
         name: formData.name,
         email,
@@ -192,7 +157,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
         language: 'es',
         theme: 'light',
       });
-<<<<<<< HEAD
       console.log('[API] Usuario creado correctamente en backend', created);
       showToast('Cuenta creada correctamente.', 'success');
       onComplete(created);
@@ -224,20 +188,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
       setError(msg);
       console.error('[ERROR] Error en registro', err);
       showToast(msg, 'error');
-=======
-      onComplete(created);
-    } catch (err: any) {
-      let msg =
-        err?.message ||
-        'No se pudo completar el registro. Revisa los datos o intenta de nuevo.';
-      if (typeof msg === 'string' && msg.toLowerCase().includes('failed to fetch')) {
-        msg =
-          language === 'en'
-            ? 'Network error while creating your account. Please check your connection or try again.'
-            : 'Error de conexión al crear tu cuenta. Revisa tu conexión o inténtalo de nuevo.';
-      }
-      setError(msg);
->>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
     } finally {
       setLoading(false);
     }
@@ -321,14 +271,10 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
                 className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
                 placeholder="tucorreo@ejemplo.com"
                 value={email}
-<<<<<<< HEAD
                 onChange={e => {
                   setEmail(e.target.value);
                   if (error) setError(null);
                 }}
-=======
-                onChange={e => setEmail(e.target.value)}
->>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
               />
             </div>
 
@@ -339,7 +285,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
                 className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
                 placeholder="Mínimo 6 caracteres"
                 value={password}
-<<<<<<< HEAD
                 onChange={e => {
                   setPassword(e.target.value);
                   if (error) setError(null);
@@ -348,10 +293,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
               {password && password.length > 0 && password.length < 6 && (
                 <p className="text-xs text-orange-600">La contraseña debe tener al menos 6 caracteres</p>
               )}
-=======
-                onChange={e => setPassword(e.target.value)}
-              />
->>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
             </div>
 
             <div className="space-y-2">
@@ -361,7 +302,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
                 className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-travel-primary focus:outline-none"
                 placeholder="Repite la contraseña"
                 value={passwordConfirm}
-<<<<<<< HEAD
                 onChange={e => {
                   setPasswordConfirm(e.target.value);
                   if (error) setError(null);
@@ -370,10 +310,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
               {passwordConfirm && passwordConfirm !== password && password.length >= 6 && (
                 <p className="text-xs text-red-600">Las contraseñas no coinciden</p>
               )}
-=======
-                onChange={e => setPasswordConfirm(e.target.value)}
-              />
->>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
             </div>
 
             <div className="space-y-2">
@@ -478,11 +414,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel, la
           <Button 
             fullWidth 
             onClick={handleNext}
-<<<<<<< HEAD
             disabled={loading}
-=======
-            disabled={step === 1 && (!formData.name || !formData.destination || !email)}
->>>>>>> d74d8ba329a4ce9beb29637eb1dd2ad15c3bc3e7
           >
             Siguiente
           </Button>
