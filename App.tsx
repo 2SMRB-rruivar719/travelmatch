@@ -8,15 +8,10 @@ import { ProfileView } from './components/ProfileView';
 import { Login } from './components/Login';
 import { LanguageCode, ThemeMode, UserProfile } from './types';
 import { Logo } from './components/Logo';
-import { ToastProvider, useToast } from './components/ToastProvider';
 
 const AppInner: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [currentView, setCurrentView] = useState('match');
-  const [authView, setAuthView] = useState<'landing' | 'login' | 'register'>('landing');
-  const [language, setLanguage] = useState<LanguageCode>('es');
-  const [theme, setTheme] = useState<ThemeMode>('light');
-  const { showToast } = useToast();
 
   // Load user from local storage (mock persistence)
   React.useEffect(() => {
@@ -26,16 +21,6 @@ const AppInner: React.FC = () => {
     }
   }, []);
 
-  const handleLoginSuccess = (profile: UserProfile) => {
-    console.log('[FLOW] Login completado, usuario autenticado', profile);
-    setCurrentUser(profile);
-    setLanguage(profile.language);
-    setTheme(profile.theme || 'light');
-    setCurrentView('match');
-    setAuthView('landing');
-    showToast('Sesión iniciada correctamente. ¡Bienvenido de nuevo a TravelMatch! 🌍', 'success');
-  };
-
   const handleOnboardingComplete = (profile: UserProfile) => {
     console.log('[FLOW] Registro completado, usuario creado', profile);
     showToast('Cuenta creada correctamente. ¡Bienvenido a TravelMatch! 🌍', 'success');
@@ -43,7 +28,6 @@ const AppInner: React.FC = () => {
     setLanguage(profile.language);
     setTheme(profile.theme || 'light');
     setCurrentView('match');
-    setAuthView('landing');
   };
 
   const handleUpdateUser = (updatedProfile: UserProfile) => {
@@ -52,31 +36,11 @@ const AppInner: React.FC = () => {
     setCurrentUser(updatedProfile);
     localStorage.setItem('tm_user', JSON.stringify(updatedProfile));
   };
-  const handleChangeLanguage = (lang: LanguageCode) => {
-    setLanguage(lang);
-    if (currentUser) {
-      const updated = { ...currentUser, language: lang };
-      setCurrentUser(updated);
-      localStorage.setItem('tm_user', JSON.stringify(updated));
-    }
-  };
-
-  const handleChangeTheme = (mode: ThemeMode) => {
-    setTheme(mode);
-    if (currentUser) {
-      const updated = { ...currentUser, theme: mode };
-      setCurrentUser(updated);
-      localStorage.setItem('tm_user', JSON.stringify(updated));
-    }
-  };
 
   const handleLogout = () => {
     localStorage.removeItem('tm_user');
     setCurrentUser(null);
     setCurrentView('match');
-    setAuthView('landing');
-    setLanguage('es');
-    setTheme('light');
   };
 
   const renderContent = () => {
@@ -132,25 +96,7 @@ const AppInner: React.FC = () => {
              <p className="text-white/95 text-center mb-8 max-w-xs mx-auto text-lg font-medium drop-shadow-md tracking-wide">
                Encuentra compañeros de viaje, planifica con IA y explora el mundo.
              </p>
-
-             <div className="flex flex-col gap-3 max-w-xs mx-auto mb-6">
-               <button
-                 type="button"
-                 onClick={() => setAuthView('login')}
-                className="w-full py-3 rounded-xl bg-white text-travel-dark font-semibold shadow-lg hover:bg-gray-100 transition-colors"
-               >
-                 Iniciar sesión
-               </button>
-               <button
-                 type="button"
-                 onClick={() => setAuthView('register')}
-                 className="w-full py-3 rounded-xl border border-white/80 text-white font-semibold hover:bg-white/10 transition-colors"
-               >
-                 Crear cuenta nueva
-               </button>
-             </div>
-
-             <Onboarding onComplete={handleOnboardingComplete} language={language} />
+             <Onboarding onComplete={handleOnboardingComplete} />
           </div>
         </div>
       );
