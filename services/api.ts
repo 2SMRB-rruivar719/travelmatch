@@ -1,41 +1,25 @@
 import { UserProfile, LanguageCode, ThemeMode } from "../types";
 
-const resolveApiBaseUrl = (): string => {
-  const envBase = (import.meta as any)?.env?.VITE_API_BASE_URL as string | undefined;
-  if (envBase && envBase.trim()) {
-    return envBase.replace(/\/$/, "");
-  }
-
-  if (typeof window === "undefined") {
-    return "http://localhost:4000/api";
-  }
-
-  const { origin, hostname, port } = window.location;
-  const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
-  const localFrontendPorts = new Set(["3000", "4173", "5173"]);
-
-  if (isLocalHost && localFrontendPorts.has(port)) {
-    return "http://localhost:4000/api";
-  }
-
-  return `${origin.replace(/\/$/, "")}/api`;
-};
-
-const API_BASE_URL = resolveApiBaseUrl();
-
-if (typeof window !== "undefined") {
-  console.log("[API][INIT] API_BASE_URL resuelta", {
-    origin: window.location.origin,
-    apiBaseUrl: API_BASE_URL,
-  });
-}
+// Detectar entorno automáticamente:
+// - En desarrollo (Vite en puerto 5173) usamos backend en localhost:4000
+// - En producción (por ejemplo travelmatch.ddns.net) usamos el mismo origen /api
+const API_BASE_URL =
+  typeof window !== "undefined"
+    ? (() => {
+        const origin = window.location.origin;
+        if (origin.endsWith(":5173")) {
+          return "http://localhost:4000/api";
+        }
+        return `${origin.replace(/\/$/, "")}/api`;
+      })()
+    : "http://localhost:4000/api";
 
 export interface RegisterPayload {
-  name?: string;
+  name: string;
   email: string;
   password: string;
-  role?: "cliente" | "empresa";
-  destination?: string;
+  role: "cliente" | "empresa";
+  destination: string;
   dates?: string;
   age?: number;
   country?: string;
@@ -51,28 +35,10 @@ export interface RegisterPayload {
 export async function registerUser(
   payload: RegisterPayload
 ): Promise<UserProfile> {
-  const endpoint = `${API_BASE_URL}/auth/register`;
-  const requestStartedAt = Date.now();
-  console.log("[API][REGISTER] Preparando request", {
-    endpoint,
-    payloadPreview: {
-      ...payload,
-      password: `***hidden***(${payload.password.length})`,
-    },
-  });
-
-  const res = await fetch(endpoint, {
+  const res = await fetch(`${API_BASE_URL}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
-
-  console.log("[API][REGISTER] Response recibida", {
-    endpoint,
-    ok: res.ok,
-    status: res.status,
-    statusText: res.statusText,
-    elapsedMs: Date.now() - requestStartedAt,
   });
 
   let data: any = null;
@@ -80,22 +46,11 @@ export async function registerUser(
 
   try {
     data = await res.json();
-    console.log("[API][REGISTER] Body parseado como JSON", {
-      type: typeof data,
-      hasId: !!data?.id,
-      hasError: !!data?.error,
-    });
   } catch {
-    console.warn("[API][REGISTER] No se pudo parsear JSON, intentando leer texto");
     // Si no es JSON válido, intentamos leer el cuerpo como texto
     try {
-      fallbackText = await res.clone().text();
-      console.log("[API][REGISTER] Body fallback en texto", {
-        length: fallbackText?.length || 0,
-        preview: fallbackText?.slice(0, 200),
-      });
+      fallbackText = await res.text();
     } catch {
-      console.error("[API][REGISTER] Tampoco se pudo leer body como texto");
       // ignoramos el error, nos quedamos sin cuerpo legible
     }
   }
@@ -105,20 +60,8 @@ export async function registerUser(
       (data && typeof data === "object" && (data.error || data.message)) ||
       fallbackText ||
       "Error al registrar usuario";
-    console.error("[API][REGISTER] Request fallida", {
-      endpoint,
-      status: res.status,
-      statusText: res.statusText,
-      message,
-    });
     throw new Error(message);
   }
-
-  console.log("[API][REGISTER] Request exitosa", {
-    endpoint,
-    userId: data?.id,
-    userEmail: data?.email,
-  });
 
   return data as UserProfile;
 }

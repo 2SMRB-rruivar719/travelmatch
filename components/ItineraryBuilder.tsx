@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile, Itinerary } from '../types';
-import { generateItinerary } from '../services/aiService';
+import { generateItinerary } from '../services/geminiService';
 import { Button } from './Button';
 import { Map, Clock, MapPin, Sparkles, Share2 } from 'lucide-react';
 
@@ -26,7 +26,7 @@ export const ItineraryBuilder: React.FC<ItineraryBuilderProps> = ({ currentUser 
   };
 
   return (
-    <div className="p-4 max-w-5xl mx-auto mb-24 lg:mb-8 lg:py-8">
+    <div className="p-4 max-w-2xl mx-auto mb-24">
       <div className="mb-6 bg-gradient-to-r from-travel-primary to-travel-accent p-6 rounded-3xl text-white shadow-lg">
         <h2 className="text-2xl font-bold mb-2">Planificador IA</h2>
         <p className="opacity-90 mb-4 text-sm">Crea el viaje perfecto a {currentUser.destination} basado en tus gustos.</p>
@@ -70,7 +70,7 @@ export const ItineraryBuilder: React.FC<ItineraryBuilderProps> = ({ currentUser 
              </button>
            </div>
 
-           <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+           <div className="space-y-4">
              {itinerary.days.map((day) => (
                <div key={day.day} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                  <div className="flex items-center gap-3 mb-4">

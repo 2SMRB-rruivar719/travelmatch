@@ -2,54 +2,29 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import bcrypt from "bcryptjs";
-import dotenv from "dotenv";
-
-dotenv.config({ path: ".env.local" });
-dotenv.config();
 
 const app = express();
-const PORT = Number(process.env.PORT || 4000);
+const PORT = process.env.PORT || 4000;
 
 // MongoDB connection (default port 27017)
 const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/travelmatch";
 
-mongoose.connection.on("connected", () => {
-  console.log("✅ MongoDB conectado", {
-    host: mongoose.connection.host,
-    port: mongoose.connection.port,
-    dbName: mongoose.connection.name,
+mongoose
+  .connect(MONGODB_URI, {
+    dbName: "travelmatch",
+  })
+  .then(() => {
+    console.log("✅ Conectado a MongoDB en el puerto 27017");
+  })
+  .catch((err) => {
+    console.error("❌ Error conectando a MongoDB:", err.message);
   });
-});
-
-mongoose.connection.on("disconnected", () => {
-  console.warn("⚠️ MongoDB desconectado");
-});
-
-mongoose.connection.on("error", (err) => {
-  console.error("❌ Evento de error de MongoDB", { message: err?.message });
-});
 
 // Middlewares
 // Permitimos todas las procedencias para facilitar desarrollo y despliegue
 app.use(cors());
 app.use(express.json());
-
-app.get("/api/health", (_req, res) => {
-  res.json({
-    ok: true,
-    service: "travelmatch-api",
-    mongoState: mongoose.connection.readyState,
-    mongoStateLabel:
-      mongoose.connection.readyState === 1
-        ? "connected"
-        : mongoose.connection.readyState === 2
-          ? "connecting"
-          : mongoose.connection.readyState === 3
-            ? "disconnecting"
-            : "disconnected",
-  });
-});
 
 // Esquema de usuario con credenciales y rol
 const userSchema = new mongoose.Schema(
@@ -90,7 +65,6 @@ const User = mongoose.model("User", userSchema);
 
 // Registro
 app.post("/api/auth/register", async (req, res) => {
-  const requestStartedAt = Date.now();
   try {
     const {
       name,
@@ -109,74 +83,56 @@ app.post("/api/auth/register", async (req, res) => {
       language,
       theme,
     } = req.body;
-    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
-    const normalizedName = typeof name === "string" && name.trim()
-      ? name.trim()
-      : (normalizedEmail.split("@")[0] || "Viajero");
-    const normalizedRole = role === "empresa" ? "empresa" : "cliente";
-    const normalizedDestination = typeof destination === "string" && destination.trim()
-      ? destination.trim()
-      : "Sin destino";
 
-    console.log("[SERVER][REGISTER] Request entrante", {
-      path: req.path,
-      method: req.method,
-      ip: req.ip,
-      bodyPreview: {
-        ...req.body,
-        password: typeof password === "string" ? `***hidden***(${password.length})` : "missing-or-invalid",
-      },
-    });
-
-    // Validaciones mínimas: solo email y contraseña
+    // Validaciones más específicas
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      return res.status(400).json({ error: "El nombre es obligatorio." });
+    }
+    
     if (!email || typeof email !== 'string' || email.trim() === '') {
-      console.warn("[SERVER][REGISTER] Validación fallida", { reason: "email_required", email });
       return res.status(400).json({ error: "El email es obligatorio." });
     }
     
     if (!password || typeof password !== 'string') {
-      console.warn("[SERVER][REGISTER] Validación fallida", {
-        reason: "password_required",
-        passwordType: typeof password,
-      });
       return res.status(400).json({ error: "La contraseña es obligatoria." });
     }
     
+    if (!role || typeof role !== 'string') {
+      return res.status(400).json({ error: "El rol es obligatorio." });
+    }
+    
+    if (!destination || typeof destination !== 'string' || destination.trim() === '') {
+      return res.status(400).json({ error: "El destino es obligatorio." });
+    }
+
     if (!email.includes("@") || !email.includes(".") || email.length < 5) {
-      console.warn("[SERVER][REGISTER] Validación fallida", {
-        reason: "email_format_invalid",
-        email,
-      });
       return res.status(400).json({ error: "El email debe tener un formato válido (ejemplo@dominio.com)." });
     }
 
+    if (!["cliente", "empresa"].includes(role)) {
+      return res.status(400).json({ error: "Rol inválido." });
+    }
+
     if (password.length < 6) {
-      console.warn("[SERVER][REGISTER] Validación fallida", {
-        reason: "password_too_short",
-        passwordLength: password.length,
-      });
       return res
         .status(400)
         .json({ error: "La contraseña debe tener al menos 6 caracteres." });
     }
 
-    console.log("[SERVER][REGISTER] Buscando email existente", { email: email.trim().toLowerCase() });
-    const existing = await User.findOne({ email: normalizedEmail });
+    const existing = await User.findOne({ email });
     if (existing) {
-      console.warn("[SERVER][REGISTER] Email duplicado", { email });
       return res.status(409).json({ error: "El email ya está registrado." });
     }
 
-    console.log("[SERVER][REGISTER] Generando hash de contraseña", { rounds: 10 });
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Limpiar valores undefined para que MongoDB use los defaults del schema
     const userData = {
-      name: normalizedName,
-      email: normalizedEmail,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
       passwordHash,
-      role: normalizedRole,
-      destination: normalizedDestination,
+      role,
+      destination: destination.trim(),
     };
     
     // Solo añadir campos opcionales si tienen valor
@@ -191,33 +147,14 @@ app.post("/api/auth/register", async (req, res) => {
     if (language) userData.language = language;
     if (theme) userData.theme = theme;
 
-    console.log("[SERVER][REGISTER] Payload final para Mongo", {
-      ...userData,
-      passwordHashLength: passwordHash.length,
-    });
-
     const user = await User.create(userData);
-
-    console.log("[SERVER][REGISTER] Usuario creado correctamente", {
-      elapsedMs: Date.now() - requestStartedAt,
-      userId: user._id?.toString(),
-      email: user.email,
-      role: user.role,
-    });
 
     res.status(201).json(user.toJSON());
   } catch (err) {
-    console.error("[SERVER][REGISTER] Error en registro", {
-      elapsedMs: Date.now() - requestStartedAt,
-      message: err?.message,
-      code: err?.code,
-      stack: err?.stack,
-      rawError: err,
-    });
+    console.error("Error en registro:", err);
 
     // Email duplicado (por índice único en Mongo)
     if (err && err.code === 11000) {
-      console.warn("[SERVER][REGISTER] Error de índice único (email duplicado)");
       return res.status(409).json({ error: "El email ya está registrado." });
     }
 
@@ -228,7 +165,6 @@ app.post("/api/auth/register", async (req, res) => {
       msg.toLowerCase().includes("failed to connect") ||
       msg.toLowerCase().includes("server selection")
     ) {
-      console.error("[SERVER][REGISTER] Error de conexión a MongoDB detectado", { msg });
       return res.status(500).json({
         error:
           "No se pudo conectar a la base de datos. Asegúrate de que MongoDB esté en ejecución y que la URI sea correcta.",
@@ -243,7 +179,6 @@ app.post("/api/auth/register", async (req, res) => {
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
 
     if (!email || !password) {
       return res
@@ -255,7 +190,7 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(400).json({ error: "Email inválido." });
     }
 
-    const user = await User.findOne({ email: normalizedEmail });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ error: "Credenciales incorrectas." });
     }
@@ -297,27 +232,7 @@ app.put("/api/users/:id", async (req, res) => {
   }
 });
 
-const startServer = async () => {
-  try {
-    console.log("[SERVER][BOOT] Conectando con MongoDB...", {
-      uri: MONGODB_URI.replace(/:\/\/([^@]+)@/, "://***:***@"),
-    });
-
-    await mongoose.connect(MONGODB_URI, {
-      dbName: "travelmatch",
-      serverSelectionTimeoutMS: 5000,
-    });
-
-    app.listen(PORT, () => {
-      console.log(`🚀 API de TravelMatch escuchando en http://localhost:${PORT}`);
-    });
-  } catch (err) {
-    console.error("❌ No se pudo iniciar la API por fallo de MongoDB", {
-      message: err?.message,
-    });
-    process.exit(1);
-  }
-};
-
-startServer();
+app.listen(PORT, () => {
+  console.log(`🚀 API de TravelMatch escuchando en http://localhost:${PORT}`);
+});
 

@@ -42,7 +42,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   if (isEditing) {
     return (
-      <div className="p-6 max-w-2xl mx-auto bg-white min-h-screen pb-24 lg:pb-10 lg:mt-8 lg:rounded-3xl lg:border lg:border-gray-100 lg:shadow-sm">
+      <div className="p-6 max-w-md mx-auto bg-white min-h-screen pb-24">
         <div className="flex items-center gap-2 mb-6 mt-4">
           <button onClick={handleCancel} className="p-2 hover:bg-gray-100 rounded-full">
             <ChevronLeft size={22} className="text-gray-600" />
@@ -139,7 +139,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white min-h-screen pb-24 lg:pb-10 lg:mt-8 lg:rounded-3xl lg:border lg:border-gray-100 lg:shadow-sm">
+    <div className="p-6 max-w-md mx-auto bg-white min-h-screen pb-24">
        <div className="text-center mb-8 mt-10">
          <div className="relative inline-block">
            <img src={currentUser.avatarUrl} className="w-28 h-28 rounded-full border-4 border-travel-secondary object-cover" alt="Profile" />
@@ -155,7 +155,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
          <p className="text-gray-500 text-sm mt-1">{currentUser.email}</p>
        </div>
 
-       <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+       <div className="space-y-4">
          <div className="bg-gray-50 p-4 rounded-xl space-y-3">
            <h3 className="text-xs font-bold text-gray-400 uppercase mb-2">Ajustes</h3>
            <div className="flex items-center justify-between">
@@ -216,14 +216,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
            </div>
          </div>
          
-         <div className="lg:col-span-2">
-           <button 
-            onClick={onLogout}
-            className="w-full py-3 text-red-500 font-medium hover:bg-red-50 rounded-xl transition-colors mt-4"
-           >
-             Cerrar Sesión
-           </button>
-         </div>
+         <button 
+          onClick={onLogout}
+          className="w-full py-3 text-red-500 font-medium hover:bg-red-50 rounded-xl transition-colors mt-8"
+         >
+           Cerrar Sesión
+         </button>
        </div>
     </div>
   );
