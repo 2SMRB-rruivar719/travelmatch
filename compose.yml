@@ -26,7 +26,7 @@ services:
     ports:
       - "127.0.0.1:4000:4000"
     depends_on:
-      mongo:
+      - mongo
     networks:
       - travelmatch-net
   mongo:
@@ -46,6 +46,7 @@ volumes:
 networks:
   travelmatch-net:
     driver: bridge
+
 
 
 
