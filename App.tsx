@@ -8,18 +8,36 @@ import { ProfileView } from './components/ProfileView';
 import { Login } from './components/Login';
 import { LanguageCode, ThemeMode, UserProfile } from './types';
 import { Logo } from './components/Logo';
+import { Button } from './components/Button';
+import { ToastProvider, useToast } from './components/ToastProvider';
 
 const AppInner: React.FC = () => {
+  const { showToast } = useToast();
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [currentView, setCurrentView] = useState('match');
+  const [authView, setAuthView] = useState<'landing' | 'login' | 'register'>('landing');
+  const [language, setLanguage] = useState<LanguageCode>('es');
+  const [theme, setTheme] = useState<ThemeMode>('light');
 
   // Load user from local storage (mock persistence)
   React.useEffect(() => {
     const savedUser = localStorage.getItem('tm_user');
     if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
+      const parsedUser = JSON.parse(savedUser) as UserProfile;
+      setCurrentUser(parsedUser);
+      setLanguage(parsedUser.language || 'es');
+      setTheme(parsedUser.theme || 'light');
     }
   }, []);
+
+  const handleLoginSuccess = (user: UserProfile) => {
+    console.log('[FLOW] Login completado, usuario autenticado', user);
+    setCurrentUser(user);
+    setLanguage(user.language || 'es');
+    setTheme(user.theme || 'light');
+    setCurrentView('match');
+    localStorage.setItem('tm_user', JSON.stringify(user));
+  };
 
   const handleOnboardingComplete = (profile: UserProfile) => {
     console.log('[FLOW] Registro completado, usuario creado', profile);
@@ -28,6 +46,7 @@ const AppInner: React.FC = () => {
     setLanguage(profile.language);
     setTheme(profile.theme || 'light');
     setCurrentView('match');
+    localStorage.setItem('tm_user', JSON.stringify(profile));
   };
 
   const handleUpdateUser = (updatedProfile: UserProfile) => {
@@ -41,13 +60,32 @@ const AppInner: React.FC = () => {
     localStorage.removeItem('tm_user');
     setCurrentUser(null);
     setCurrentView('match');
+    setAuthView('landing');
+  };
+
+  const handleChangeLanguage = (nextLanguage: LanguageCode) => {
+    setLanguage(nextLanguage);
+    if (!currentUser) return;
+
+    const updatedUser = { ...currentUser, language: nextLanguage };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('tm_user', JSON.stringify(updatedUser));
+  };
+
+  const handleChangeTheme = (nextTheme: ThemeMode) => {
+    setTheme(nextTheme);
+    if (!currentUser) return;
+
+    const updatedUser = { ...currentUser, theme: nextTheme };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('tm_user', JSON.stringify(updatedUser));
   };
 
   const renderContent = () => {
     if (!currentUser) {
       if (authView === 'login') {
         return (
-          <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center">
+          <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')] bg-cover bg-center">
             <div className="min-h-screen bg-travel-primary/90 backdrop-blur-sm flex flex-col p-4 overflow-y-auto">
               <Login
                 onLoginSuccess={handleLoginSuccess}
@@ -60,7 +98,7 @@ const AppInner: React.FC = () => {
 
       if (authView === 'register') {
         return (
-          <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center">
+          <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')] bg-cover bg-center">
             <div className="min-h-screen bg-travel-primary/90 backdrop-blur-sm flex flex-col p-4 overflow-y-auto">
               <div className="flex flex-col items-center justify-center gap-6 mt-10 mb-4 animate-fade-in-up">
                 <div className="bg-white/90 p-6 rounded-[2.5rem] backdrop-blur-md border border-white/50 shadow-2xl">
@@ -79,7 +117,7 @@ const AppInner: React.FC = () => {
 
       // Landing inicial con botones de acceso
       return (
-        <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center">
+        <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')] bg-cover bg-center">
           <div className="min-h-screen bg-travel-primary/90 backdrop-blur-sm flex flex-col p-4 overflow-y-auto">
              <div className="flex flex-col items-center justify-center gap-6 mt-16 mb-8 animate-fade-in-up">
                 {/* Logo Icon in Glass Bubble */}
@@ -96,7 +134,19 @@ const AppInner: React.FC = () => {
              <p className="text-white/95 text-center mb-8 max-w-xs mx-auto text-lg font-medium drop-shadow-md tracking-wide">
                Encuentra compañeros de viaje, planifica con IA y explora el mundo.
              </p>
-             <Onboarding onComplete={handleOnboardingComplete} />
+             <div className="w-full max-w-xs mx-auto space-y-3">
+               <Button fullWidth onClick={() => setAuthView('login')}>
+                 Iniciar sesión
+               </Button>
+               <Button
+                 fullWidth
+                 variant="outline"
+                 onClick={() => setAuthView('register')}
+                 className="border-white/80 text-white bg-white/10 backdrop-blur-sm shadow-md hover:bg-white hover:text-travel-primary"
+               >
+                 Crear cuenta
+               </Button>
+             </div>
           </div>
         </div>
       );
@@ -127,15 +177,32 @@ const AppInner: React.FC = () => {
   };
 
   const isDark = theme === 'dark';
+  const isAuthenticated = !!currentUser;
 
   return (
     <div
       className={`min-h-screen font-sans ${
-        isDark ? 'bg-slate-900 text-gray-100' : 'bg-gray-50 text-gray-800'
+        isDark
+          ? 'bg-slate-900 text-gray-100'
+          : isAuthenticated
+            ? 'bg-gradient-to-br from-[#f9f9f9] via-white to-travel-secondary/30 text-gray-800'
+            : 'bg-gray-50 text-gray-800'
       }`}
     >
-      {renderContent()}
-      {currentUser && <Navigation currentView={currentView} onChangeView={setCurrentView} />}
+      {isAuthenticated ? (
+        <div className="min-h-screen lg:pl-72">
+          <div className="mx-auto w-full lg:max-w-[1360px]">{renderContent()}</div>
+        </div>
+      ) : (
+        renderContent()
+      )}
+      {currentUser && (
+        <Navigation
+          currentView={currentView}
+          onChangeView={setCurrentView}
+          currentUser={currentUser}
+        />
+      )}
     </div>
   );
 };
